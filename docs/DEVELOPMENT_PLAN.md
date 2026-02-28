@@ -80,9 +80,9 @@
     - `src/assets/`（静态资源）
     - `src/styles/`（全局样式）
 - **验收内容**：
-  - [ ] 目录结构清晰，符合 Feature-based 架构
-  - [ ] 各目录下有 `index.ts` 统一导出
-  - [ ] README 中补充目录结构说明
+  - [x] 目录结构清晰，符合 Feature-based 架构
+  - [x] 各目录下有 `index.ts` 统一导出
+  - [x] README 中补充目录结构说明
 
 ### 1.6 配置状态管理与路由
 
