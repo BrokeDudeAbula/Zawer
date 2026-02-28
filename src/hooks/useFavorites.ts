@@ -1,9 +1,26 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { favoriteService } from '@/services'
 
 export function useFavorites() {
-  const [favorites, setFavorites] = useState<string[]>(() => favoriteService.getList())
+  const [favorites, setFavorites] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+
+  const loadFavorites = useCallback(async () => {
+    try {
+      setLoading(true)
+      const list = await favoriteService.getList()
+      setFavorites(list)
+    } catch (err) {
+      console.error('Failed to load favorites:', err)
+      setFavorites([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadFavorites()
+  }, [loadFavorites])
 
   const isFavorited = useCallback(
     (merchantId: string): boolean => {
@@ -24,9 +41,9 @@ export function useFavorites() {
 
       try {
         if (isFavorited(merchantId)) {
-          favoriteService.remove(merchantId)
+          await favoriteService.remove(merchantId)
         } else {
-          favoriteService.add(merchantId)
+          await favoriteService.add(merchantId)
         }
       } catch (err) {
         // 回滚
@@ -44,5 +61,6 @@ export function useFavorites() {
     isFavorited,
     toggleFavorite,
     loading,
+    refresh: loadFavorites,
   }
 }
