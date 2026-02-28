@@ -1,42 +1,44 @@
-const STORAGE_KEY = 'zawer_favorites'
+import request from '@/services/request'
 
-const getFavoritesFromStorage = (): string[] => {
+const getToken = (): string | null => {
   try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : []
+    const authStorage = localStorage.getItem('auth-storage')
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage)
+      return parsed.state?.token || null
+    }
   } catch {
-    return []
+    return null
   }
-}
-
-const saveFavoritesToStorage = (favorites: string[]) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites))
-  } catch (err) {
-    console.error('Failed to save favorites:', err)
-  }
+  return null
 }
 
 export const favoriteService = {
-  getList(): string[] {
-    return getFavoritesFromStorage()
-  },
-
-  add(merchantId: string): void {
-    const favorites = getFavoritesFromStorage()
-    if (!favorites.includes(merchantId)) {
-      favorites.push(merchantId)
-      saveFavoritesToStorage(favorites)
+  async getList(): Promise<string[]> {
+    const token = getToken()
+    if (!token) {
+      return []
     }
+    const response = await request.get('/users/me/favorites')
+    const data = response as unknown as { list: Array<{ id: string }>; total: number }
+    return data.list.map((m) => m.id)
   },
 
-  remove(merchantId: string): void {
-    const favorites = getFavoritesFromStorage()
-    const filtered = favorites.filter((id) => id !== merchantId)
-    saveFavoritesToStorage(filtered)
+  async add(merchantId: string): Promise<void> {
+    await request.post('/users/me/favorites', { merchantId })
   },
 
-  isFavorited(merchantId: string): boolean {
-    return getFavoritesFromStorage().includes(merchantId)
+  async remove(merchantId: string): Promise<void> {
+    await request.delete(`/users/me/favorites/${merchantId}`)
+  },
+
+  async isFavorited(merchantId: string): Promise<boolean> {
+    const token = getToken()
+    if (!token) {
+      return false
+    }
+    const response = await request.get(`/users/me/favorites/${merchantId}/check`)
+    const data = response as unknown as { isFavorited: boolean }
+    return data.isFavorited
   },
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { merchantService, favoriteService } from '@/services'
+import { merchantService } from '@/services'
 import { useFavorites } from '@/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import LoginGuard from '@/components/LoginGuard'
@@ -17,7 +17,7 @@ export default function FavoritesPage() {
     async function loadFavorites() {
       try {
         setLoading(true)
-        const favoriteIds = favoriteService.getList()
+        const favoriteIds = favorites
         const merchantDetails = await Promise.all(
           favoriteIds.map((id) => merchantService.getById(id)),
         )
