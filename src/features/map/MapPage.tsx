@@ -1,17 +1,22 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import type { Merchant } from '@/types'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useMerchants } from '@/hooks/useMerchants'
+import { useAppStore } from '@/stores/app-store'
+import { calculateDistance } from '@/utils/geo'
 import MapContainer from './components/MapContainer'
 import LocationMarker from './components/LocationMarker'
 import LocationPermissionTip from './components/LocationPermissionTip'
 import MerchantMarkers from './components/MerchantMarkers'
 import MerchantInfoCard from './components/MerchantInfoCard'
 import LocateButton from './components/LocateButton'
+import { FilterButton } from './components/FilterButton'
+import { FilterPanel } from './components/FilterPanel'
 
 export default function MapPage() {
   const mapRef = useRef<any>(null)
   const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   // 定位
   const {
@@ -24,6 +29,52 @@ export default function MapPage() {
 
   // 商家数据
   const { merchants } = useMerchants()
+
+  // 筛选条件
+  const { filters } = useAppStore()
+
+  // 应用筛选逻辑
+  const filteredMerchants = useMemo(() => {
+    return merchants.filter((merchant) => {
+      // 品类筛选
+      if (filters.category.length > 0 && !filters.category.includes(merchant.category)) {
+        return false
+      }
+
+      // Zawer 等级筛选
+      if (
+        merchant.zawerIndex < filters.zawerLevel[0] ||
+        merchant.zawerIndex > filters.zawerLevel[1]
+      ) {
+        return false
+      }
+
+      // 距离筛选
+      if (userPosition && filters.distance !== 3000) {
+        const distance = calculateDistance(
+          userPosition.lat,
+          userPosition.lng,
+          merchant.lat,
+          merchant.lng
+        )
+        if (distance > filters.distance) {
+          return false
+        }
+      }
+
+      return true
+    })
+  }, [merchants, filters, userPosition])
+
+  // 判断是否有活跃的筛选条件
+  const hasActiveFilters = useMemo(() => {
+    return (
+      filters.category.length > 0 ||
+      filters.zawerLevel[0] !== 1 ||
+      filters.zawerLevel[1] !== 5 ||
+      filters.distance !== 3000
+    )
+  }, [filters])
 
   // 地图就绪回调
   const handleMapReady = useCallback((map: any) => {
@@ -74,7 +125,7 @@ export default function MapPage() {
         {mapRef.current && (
           <MerchantMarkers
             map={mapRef.current}
-            merchants={merchants}
+            merchants={filteredMerchants}
             onMarkerClick={handleMarkerClick}
           />
         )}
@@ -85,6 +136,18 @@ export default function MapPage() {
         error={locationError}
         permissionDenied={permissionDenied}
         onRetry={locate}
+      />
+
+      {/* 筛选按钮 */}
+      <FilterButton
+        onClick={() => setIsFilterOpen(true)}
+        hasActiveFilters={hasActiveFilters}
+      />
+
+      {/* 筛选面板 */}
+      <FilterPanel
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
       />
 
       {/* 回到我的位置按钮 */}
