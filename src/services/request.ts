@@ -24,7 +24,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => response.data,
   (error: AxiosError) => {
-    const message = error.response?.data?.message || '网络请求失败，请稍后重试'
+    const message = (error.response?.data as any)?.message || '网络请求失败，请稍后重试'
     console.error('[API Error]', message)
     return Promise.reject(error)
   },
