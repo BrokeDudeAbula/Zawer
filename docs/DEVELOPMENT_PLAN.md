@@ -35,9 +35,9 @@
   - 配置 `.editorconfig`
   - 确保 ESLint 与 Prettier 规则不冲突
 - **验收内容**：
-  - [ ] `npm run lint` 可正常执行且无报错
-  - [ ] `npm run format` 可自动格式化代码
-  - [ ] IDE 保存时自动格式化生效
+  - [x] `npm run lint` 可正常执行且无报错
+  - [x] `npm run format` 可自动格式化代码
+  - [x] IDE 保存时自动格式化生效
 
 ### 1.3 配置 Git Hooks（Husky + lint-staged）
 
