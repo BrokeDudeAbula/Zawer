@@ -40,9 +40,9 @@ export const userService = {
   },
 
   /**
-   * 模拟发送验证码
+   * 发送验证码
    */
-  sendCode: async (phone: string): Promise<void> => {
+  sendCode: async (_phone: string): Promise<void> => {
     await delay(300)
     // 直接返回成功
   },
@@ -58,11 +58,11 @@ export const userService = {
   /**
    * 更新用户信息
    */
-  updateProfile: async (_data: Partial<User>): Promise<User> => {
+  updateProfile: async (data: Partial<User>): Promise<User> => {
     await delay(300)
     return {
       ...mockUser,
-      ..._data
+      ...data
     }
   }
 }
