@@ -23,7 +23,7 @@ export default function MerchantDetailPage() {
       try {
         setLoading(true)
         setError(null)
-        const merchant = await merchantService.getById(id)
+        const merchant = await merchantService.getById(id as string)
         if (merchant) {
           setMerchant(merchant)
         } else {
@@ -46,7 +46,7 @@ export default function MerchantDetailPage() {
     async function loadReviews() {
       try {
         setReviewsLoading(true)
-        const response = await reviewService.getByMerchantId(merchant.id, 1, 10, 'time')
+        const response = await reviewService.getByMerchantId(merchant!.id, 1, 10, 'time')
         setReviews(response.list)
       } catch (err) {
         console.error('Failed to load reviews:', err)
