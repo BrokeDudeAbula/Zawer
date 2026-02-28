@@ -36,3 +36,8 @@ dist-ssr
 .env.production.local
 .env.development
 .env.production
+
+# Server
+server/node_modules/
+server/dist/
+server/data/
