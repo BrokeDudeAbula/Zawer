@@ -2,3 +2,4 @@
 export { useAMap } from './useAMap'
 export { useGeolocation } from './useGeolocation'
 export { useMerchants } from './useMerchants'
+export { useDebounce } from './useDebounce'
