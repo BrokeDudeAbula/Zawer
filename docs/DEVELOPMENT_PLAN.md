@@ -47,9 +47,9 @@
   - 配置 `pre-commit` 钩子执行 lint-staged
   - 配置 `commit-msg` 钩子校验 Commit Message 格式（Conventional Commits）
 - **验收内容**：
-  - [ ] `git commit` 时自动触发 ESLint 检查
-  - [ ] 不规范的 Commit Message 被拦截
-  - [ ] 仅对暂存区文件执行检查
+  - [x] `git commit` 时自动触发 ESLint 检查
+  - [x] 不规范的 Commit Message 被拦截
+  - [x] 仅对暂存区文件执行检查
 
 ### 1.4 集成 Tailwind CSS + ShadcnUI
 
