@@ -68,8 +68,8 @@ export class ReviewsService {
       merchantId: merchantId,
       rating: rating,
       content: content,
-      dimensionRatings: dimensionRatings ? JSON.stringify(dimensionRatings) : null,
-      images: images ? JSON.stringify(images) : null,
+      dimensionRatings: dimensionRatings ? JSON.stringify(dimensionRatings) : undefined,
+      images: images ? JSON.stringify(images) : undefined,
       likes: 0,
       createdAt: new Date(),
     };
