@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
 import { formatRelativeTime } from '@/utils/date'
 
 function MenuIcon({ icon }: { icon: string }) {
@@ -26,7 +28,8 @@ function MenuIcon({ icon }: { icon: string }) {
   return icons[icon] || icons.star
 }
 
-export default function ProfilePage() {  const navigate = useNavigate()
+export default function ProfilePage() {
+  const navigate = useNavigate()
   const { user, isLoggedIn, logout } = useAuth()
 
   const handleLogout = () => {
@@ -39,7 +42,9 @@ export default function ProfilePage() {  const navigate = useNavigate()
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 px-4">
         <div className="mb-6 rounded-full bg-gray-200 p-6">
-          <UserIcon className="h-16 w-16 text-gray-400" />
+          <svg className="h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
         </div>
         <h2 className="mb-2 text-2xl font-bold text-gray-900">登录后查看更多</h2>
         <p className="mb-6 text-gray-600">登录即可查看个人中心、发表点评、收藏商家</p>
