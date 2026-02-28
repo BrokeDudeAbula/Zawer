@@ -1,38 +1,55 @@
-# Zawer - 附近 Zawer 地图
+# Zawer - 附近 Zawer 地图 🗺️
 
-> 四川方言 "Zawer"，意为"差劲的、劣质的"
-> 
+![Project Status](https://img.shields.io/badge/Status-WIP-yellow) ![License](https://img.shields.io/badge/License-MIT-blue)
+
+> ⚠️ **高能预警**：
+> 四川方言 "Zawer" 意为"差劲的、劣质的"。
+> 本地图评分**越高**，代表店铺越**Zawer**（越坑）！
+>
 > "Zawer 货"用以形容劣质商品
 
-## 产品简介
+## 📖 产品简介
 
 Zawer 是一个网页应用，让用户查看附近的商家 Zawer 评分。评分越高，说明这家店越"Zawer"——越值得避坑。
 
 这不是一个普通的点评 App，而是一个反消费陷阱指南。用轻松幽默的方式，帮助用户避开那些"踩坑"商家。
 
+## 📉 Zawer 指数说明（避坑必读）
+
+| Zawer 指数 | 含义 | 建议 | 表情 |
+|:---:|:---|:---|:---:|
+| **5.0** | **极度 Zawer** | 🚫 必须绕道 | 😡 / 💩 |
+| **4.0** | 很 Zawer | ⚠️ 慎重选择 | 😨 |
+| **3.0** | 一般 Zawer | 🤔 可以尝试 | 😐 |
+| **2.0** | 不太 Zawer | 👌 放心消费 | 🙂 |
+| **1.0** | **一点都不 Zawer** | ✅ 强烈推荐 | 😍 / 💎 |
+
+## 🛠 技术架构
+
+- **前端**：React 18 + TypeScript + Vite
+- **UI 库**：Tailwind CSS + ShadcnUI (推荐，轻量且现代)
+- **地图**：高德地图 JS API 2.0
+- **后端**：Node.js (NestJS / Koa)
+- **数据库**：PostgreSQL
+- **部署**：Vercel / Docker
+
 ## 核心功能
 
 ### 1. Zawer 地图
-
 - 展示用户附近的商家位置
 - 商家图标颜色代表 Zawer 等级（红色=高 Zawer，绿色=低 Zawer）
 - 一目了然，快速决策
 
 ### 2. 商家评分
-
-- 1-5 分制 Zawer 评分
-- 5 分 = 极度 Zawer（务必避坑）
-- 1 分 = 不 Zawer（放心消费）
+- 1-5 分制 Zawer 评分（见上表）
 - 评分来源：真实用户评价 + 众包数据
 
 ### 3. 避坑指南
-
 - 用户可对商家进行 Zawer 评分
 - 撰写点评，分享"踩坑"经历
 - 查看其他用户的真实评价
 
 ### 4. 搜索与筛选
-
 - 按品类筛选（餐饮、住宿、出行等）
 - 按 Zawer 等级筛选
 - 关键词搜索商家
@@ -49,31 +66,12 @@ Zawer 是一个网页应用，让用户查看附近的商家 Zawer 评分。评�
 - **真实客观**：众包评分，拒绝刷单
 - **简单高效**：地图 + 评分，快速决策
 
-## 评分标准参考
-
-| 评分 | 含义 | 建议 |
-|------|------|------|
-| 5 分 | 极度 Zawer | 绕道走 |
-| 4 分 | 很 Zawer | 慎重选择 |
-| 3 分 | 一般 Zawer | 可以尝试 |
-| 2 分 | 不太 Zawer | 放心消费 |
-| 1 分 | 一点都不 Zawer | 强烈推荐 |
-
-## 技术栈建议
-
-- **前端**：React / Vue.js + TypeScript
-- **UI 框架**：Tailwind CSS / Ant Design / Element Plus
-- **后端**：Node.js / Go / Python
-- **数据库**：PostgreSQL / MySQL
-- **地图服务**：高德地图 JS API / Google Maps JavaScript API
-- **部署**：Vercel / 阿里云 OSS + CDN
-
 ## 开发计划
 
 ### 第一阶段：项目初始化
 
 - [ ] 初始化前端项目（React + TypeScript + Vite）
-- [ ] 配置开发环境 ESLint + Prettier
+- [ ] 配置开发环境 ESLint + Prettier + Tailwind CSS
 - [ ] 搭建项目目录结构
 
 ### 第二阶段：地图模块
@@ -99,6 +97,26 @@ Zawer 是一个网页应用，让用户查看附近的商家 Zawer 评分。评�
 - [ ] 性能优化
 - [ ] 移动端适配
 - [ ] 部署上线
+
+## 🚀 快速开始
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/zawer.git
+
+# Enter the project directory
+cd zawer
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+## 🤝 如何贡献 (Contributing)
+
+欢迎提交 Issue 或 Pull Request！请查阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多详情。
 
 ---
 
