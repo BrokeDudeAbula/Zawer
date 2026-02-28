@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { merchantService, reviewService } from '@/services'
 import { Merchant, Review } from '@/types/api'
+import { useFavorites, useBrowseHistory } from '@/hooks'
+import { useAuth } from '@/hooks/useAuth'
+import LoginGuard from '@/components/LoginGuard'
 import ZawerScore from './components/ZawerScore'
 import DimensionBar from './components/DimensionBar'
 import MerchantInfo from './components/MerchantInfo'
@@ -10,11 +13,15 @@ import ReviewList from './components/ReviewList'
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { requireAuth } = useAuth()
+  const { isFavorited, toggleFavorite } = useFavorites()
+  const { addHistory } = useBrowseHistory()
   const [merchant, setMerchant] = useState<Merchant | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [reviewsLoading, setReviewsLoading] = useState(false)
+  const [showLoginGuard, setShowLoginGuard] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -26,6 +33,7 @@ export default function MerchantDetailPage() {
         const merchant = await merchantService.getById(id as string)
         if (merchant) {
           setMerchant(merchant)
+          addHistory(merchant)
         } else {
           setError('商家不存在')
         }
@@ -38,7 +46,7 @@ export default function MerchantDetailPage() {
     }
 
     loadMerchant()
-  }, [id])
+  }, [id, addHistory])
 
   useEffect(() => {
     if (!merchant) return
@@ -83,18 +91,50 @@ export default function MerchantDetailPage() {
     )
   }
 
+  const handleToggleFavorite = () => {
+    if (!requireAuth()) {
+      setShowLoginGuard(true)
+      return
+    }
+    if (merchant) {
+      toggleFavorite(merchant.id)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          返回
-        </button>
+        <div className="mb-4 flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            返回
+          </button>
+          {merchant && (
+            <button
+              onClick={handleToggleFavorite}
+              className="flex-shrink-0 rounded-full p-2 hover:bg-gray-100"
+            >
+              <svg
+                className={`h-6 w-6 ${isFavorited(merchant.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
 
         <div className="space-y-6">
           <MerchantInfo merchant={merchant} />
@@ -122,6 +162,7 @@ export default function MerchantDetailPage() {
           我要评分
         </button>
       </div>
+      <LoginGuard isOpen={showLoginGuard} onClose={() => setShowLoginGuard(false)} />
     </div>
   )
 }
