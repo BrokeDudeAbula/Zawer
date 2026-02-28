@@ -19,6 +19,14 @@ export interface PaginatedResponse<T> {
   pageSize: number
 }
 
+// 多维度评分
+export interface DimensionRatings {
+  environment: number
+  service: number
+  price: number
+  quality: number
+}
+
 // 商家类型
 export interface Merchant {
   id: string
@@ -32,6 +40,7 @@ export interface Merchant {
   phone?: string
   businessHours?: string
   images?: string[]
+  dimensionRatings?: DimensionRatings
 }
 
 // 点评类型
@@ -42,6 +51,7 @@ export interface Review {
   userName: string
   userAvatar?: string
   rating: number
+  dimensionRatings?: DimensionRatings
   content: string
   images?: string[]
   likes: number
