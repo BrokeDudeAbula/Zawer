@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import type { Merchant } from '@/types'
 
 interface ZawerHeatmapProps {
@@ -6,8 +6,21 @@ interface ZawerHeatmapProps {
   merchants: Merchant[]
 }
 
+interface HeatMapDataSet {
+  data: { lng: number; lat: number; count: number }[]
+  max: number
+}
+
+interface HeatMapOptions {
+  radius: number
+  opacity: [number, number]
+  gradient: Record<number, string>
+  zooms: [number, number]
+}
+
 interface HeatMapInstance {
-  setDataSet(dataSet: { data: { lng: number; lat: number; count: number }[]; max: number }): void
+  setDataSet(dataSet: HeatMapDataSet): void
+  setOptions(options: HeatMapOptions): void
   setMap(map: any): void
   show(): void
   hide(): void
@@ -21,8 +34,47 @@ const GRADIENT = {
   1.0: '#d93025',
 }
 
+// 热区恒定覆盖的地理半径。高德的 radius 只接受像素，因此每次缩放都要按当前
+// 比例尺换算，才能让热区在地图上始终对应同样大的实际范围。
+const TARGET_METERS = 20
+// 仅防止极端缩放下退化为 0 或过大，正常缩放区间不会触及
+const MIN_RADIUS_PX = 1
+const MAX_RADIUS_PX = 240
+// Web Mercator 在赤道、zoom 0 时每像素代表的米数
+const EQUATOR_METERS_PER_PIXEL = 156543.03392
+
+function computeRadiusPx(map: any): number {
+  const zoom = map.getZoom?.() ?? 14
+  const lat = map.getCenter?.()?.lat ?? 30.66
+  const metersPerPixel = (EQUATOR_METERS_PER_PIXEL * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom
+  const radius = TARGET_METERS / metersPerPixel
+  return Math.round(Math.min(MAX_RADIUS_PX, Math.max(MIN_RADIUS_PX, radius)))
+}
+
+// 每次都传完整配置，避免 setOptions 是替换语义时把渐变等设置冲掉
+function buildOptions(map: any): HeatMapOptions {
+  return {
+    radius: computeRadiusPx(map),
+    opacity: [0, 0.75],
+    gradient: GRADIENT,
+    zooms: [3, 20],
+  }
+}
+
 export default function ZawerHeatmap({ map, merchants }: ZawerHeatmapProps) {
   const heatmapRef = useRef<HeatMapInstance | null>(null)
+  const dataSetRef = useRef<HeatMapDataSet | null>(null)
+
+  // 半径变化后需要重新灌一次数据才会重绘
+  const applyRadius = useCallback(() => {
+    const heatmap = heatmapRef.current
+    if (!heatmap || !map) return
+
+    heatmap.setOptions(buildOptions(map))
+    if (dataSetRef.current) {
+      heatmap.setDataSet(dataSetRef.current)
+    }
+  }, [map])
 
   useEffect(() => {
     if (!map) return
@@ -41,12 +93,7 @@ export default function ZawerHeatmap({ map, merchants }: ZawerHeatmapProps) {
 
     if (!heatmapRef.current) {
       try {
-        heatmapRef.current = new AMap.HeatMap(map, {
-          radius: 40,
-          opacity: [0, 0.75],
-          gradient: GRADIENT,
-          zooms: [3, 20],
-        })
+        heatmapRef.current = new AMap.HeatMap(map, buildOptions(map))
       } catch (err) {
         console.warn('[Heatmap] 初始化失败:', err)
         return
@@ -57,15 +104,27 @@ export default function ZawerHeatmap({ map, merchants }: ZawerHeatmapProps) {
     if (!heatmap) return
 
     if (data.length === 0) {
+      dataSetRef.current = null
       heatmap.hide()
       return
     }
 
     // max 取当前最大计数，保证数据量少时也有明显的强弱对比
-    const max = Math.max(...data.map((item) => item.count))
-    heatmap.setDataSet({ data, max })
+    dataSetRef.current = { data, max: Math.max(...data.map((item) => item.count)) }
+    heatmap.setOptions(buildOptions(map))
+    heatmap.setDataSet(dataSetRef.current)
     heatmap.show()
   }, [map, merchants])
+
+  // 缩放会改变比例尺，必须重算像素半径才能维持恒定的地理覆盖范围
+  useEffect(() => {
+    if (!map) return
+
+    map.on('zoomend', applyRadius)
+    return () => {
+      map.off('zoomend', applyRadius)
+    }
+  }, [map, applyRadius])
 
   useEffect(() => {
     return () => {

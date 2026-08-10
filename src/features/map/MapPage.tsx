@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import type { Merchant } from '@/types'
 import { useGeolocation } from '@/hooks/useGeolocation'
@@ -17,7 +17,9 @@ import CategoryChips from './components/CategoryChips'
 import { FilterPanel } from './components/FilterPanel'
 
 export default function MapPage() {
-  const mapRef = useRef<any>(null)
+  // 地图实例必须是 state：存进 ref 不会触发重渲染，依赖它的图层（热力图、定位点、标注）
+  // 就只能靠其它 state 变化偶然挂载，刷新页面时经常整片消失
+  const [map, setMap] = useState<any>(null)
   const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
@@ -87,18 +89,19 @@ export default function MapPage() {
   }, [filters])
 
   // 地图就绪回调
-  const handleMapReady = useCallback((map: any) => {
-    mapRef.current = map
+  const handleMapReady = useCallback((instance: any) => {
+    setMap((prev: any) => prev ?? instance)
   }, [])
 
   // 点击商家标注
-  const handleMarkerClick = useCallback((merchant: Merchant) => {
-    setSelectedMerchant(merchant)
-    // 平移地图到商家位置
-    if (mapRef.current) {
-      mapRef.current.panTo([merchant.lng, merchant.lat])
-    }
-  }, [])
+  const handleMarkerClick = useCallback(
+    (merchant: Merchant) => {
+      setSelectedMerchant(merchant)
+      // 平移地图到商家位置
+      map?.panTo([merchant.lng, merchant.lat])
+    },
+    [map],
+  )
 
   // 关闭信息卡片
   const handleCloseCard = useCallback(() => {
@@ -107,12 +110,12 @@ export default function MapPage() {
 
   // 回到我的位置
   const handleLocate = useCallback(() => {
-    if (userPosition && mapRef.current) {
-      mapRef.current.setZoomAndCenter(15, [userPosition.lng, userPosition.lat])
+    if (userPosition && map) {
+      map.setZoomAndCenter(15, [userPosition.lng, userPosition.lat])
     } else {
       locate()
     }
-  }, [userPosition, locate])
+  }, [userPosition, locate, map])
 
   // 地图中心点
   const center: [number, number] = userPosition
@@ -123,17 +126,15 @@ export default function MapPage() {
     <div className="relative h-full w-full">
       <MapContainer center={center} zoom={14} onMapReady={handleMapReady}>
         {/* 用户位置标记 */}
-        {userPosition && mapRef.current && (
-          <LocationMarker map={mapRef.current} position={userPosition} />
-        )}
+        {userPosition && map && <LocationMarker map={map} position={userPosition} />}
 
         {/* Zawer 热力图（在标注之下） */}
-        {mapRef.current && <ZawerHeatmap map={mapRef.current} merchants={filteredMerchants} />}
+        {map && <ZawerHeatmap map={map} merchants={filteredMerchants} />}
 
         {/* 商家标注 */}
-        {mapRef.current && (
+        {map && (
           <MerchantMarkers
-            map={mapRef.current}
+            map={map}
             merchants={filteredMerchants}
             onMarkerClick={handleMarkerClick}
           />

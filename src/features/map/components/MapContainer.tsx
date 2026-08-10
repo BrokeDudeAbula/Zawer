@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAMap } from '@/hooks/useAMap'
 
 interface MapContainerProps {
@@ -21,10 +21,12 @@ export default function MapContainer({
     zoom,
   })
 
-  // 地图就绪回调
-  if (!loading && !error && map.current && onMapReady) {
-    onMapReady(map.current)
-  }
+  // 必须在 effect 里回调：渲染期间通知父组件会导致父组件 setState 时反复触发渲染
+  useEffect(() => {
+    if (!loading && !error && map.current) {
+      onMapReady?.(map.current)
+    }
+  }, [loading, error, onMapReady, map])
 
   return (
     <div className="relative h-full w-full">
