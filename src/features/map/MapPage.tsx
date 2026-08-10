@@ -33,7 +33,12 @@ export default function MapPage() {
   } = useGeolocation()
 
   // 商家数据（库中只存被评分过的真实商家）
-  const { merchants, loading: merchantsLoading } = useMerchants()
+  const {
+    merchants,
+    loading: merchantsLoading,
+    error: merchantsError,
+    reload: reloadMerchants,
+  } = useMerchants()
 
   // 筛选条件
   const { filters, setFilters } = useAppStore()
@@ -155,8 +160,24 @@ export default function MapPage() {
         )}
       </div>
 
+      {/* 加载失败与「确实没有商家」是两回事，必须分开提示，否则后端没起来时会误导成空数据 */}
+      {!merchantsLoading && merchantsError && (
+        <div className="absolute inset-x-0 top-20 z-10 flex justify-center px-4">
+          <div className="max-w-xs rounded-gm-lg bg-white px-4 py-3 text-center shadow-gm-2">
+            <p className="text-gm-base font-medium text-ink-primary">商家数据加载失败</p>
+            <p className="mt-1 text-gm-sm text-ink-secondary">后端服务可能还没启动完成</p>
+            <button
+              onClick={reloadMerchants}
+              className="mt-2.5 rounded-pill bg-gm-blue px-4 py-1.5 text-gm-base font-medium text-white transition-colors hover:bg-gm-blue-hover"
+            >
+              重试
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 空状态引导：库中尚无任何被评分的商家 */}
-      {!merchantsLoading && merchants.length === 0 && (
+      {!merchantsLoading && !merchantsError && merchants.length === 0 && (
         <div className="absolute inset-x-0 top-20 z-10 flex justify-center px-4">
           <div className="max-w-xs rounded-gm-lg bg-white px-4 py-3 text-center shadow-gm-2">
             <p className="text-gm-base font-medium text-ink-primary">地图上还没有商家</p>
