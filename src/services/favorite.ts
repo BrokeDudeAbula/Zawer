@@ -1,21 +1,9 @@
 import request from '@/services/request'
-
-const getToken = (): string | null => {
-  try {
-    const authStorage = localStorage.getItem('auth-storage')
-    if (authStorage) {
-      const parsed = JSON.parse(authStorage)
-      return parsed.state?.token || null
-    }
-  } catch {
-    return null
-  }
-  return null
-}
+import { getStoredAuthToken } from '@/utils/auth'
 
 export const favoriteService = {
   async getList(): Promise<string[]> {
-    const token = getToken()
+    const token = getStoredAuthToken()
     if (!token) {
       return []
     }
@@ -33,7 +21,7 @@ export const favoriteService = {
   },
 
   async isFavorited(merchantId: string): Promise<boolean> {
-    const token = getToken()
+    const token = getStoredAuthToken()
     if (!token) {
       return false
     }

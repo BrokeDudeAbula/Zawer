@@ -4,16 +4,16 @@ import Layout from './components/Layout'
 import MapPage from './features/map/MapPage'
 import MerchantDetailPage from './features/merchant/MerchantDetailPage'
 import SearchPage from './features/merchant/SearchPage'
-import ProfilePage from './features/user/ProfilePage'
-import LoginPage from './features/user/LoginPage'
+import {
+  ProfilePage,
+  LoginPage,
+  FavoritesPage,
+  MyReviewsPage,
+  HistoryPage,
+  EditProfilePage,
+} from './features/user'
 import NotFound from './components/NotFound'
 import { useAuthStore } from './stores/auth-store'
-
-// 占位组件 - 后续 sub agent 会实现
-const FavoritesPage = () => <div className="p-4">我的收藏 - 开发中</div>
-const ReviewsPage = () => <div className="p-4">我的点评 - 开发中</div>
-const HistoryPage = () => <div className="p-4">浏览历史 - 开发中</div>
-const EditProfilePage = () => <div className="p-4">编辑资料 - 开发中</div>
 
 function App() {
   const refreshUser = useAuthStore((state) => state.refreshUser)
@@ -37,7 +37,7 @@ function App() {
 
           {/* 个人中心子路由 */}
           <Route path="/profile/favorites" element={<FavoritesPage />} />
-          <Route path="/profile/reviews" element={<ReviewsPage />} />
+          <Route path="/profile/reviews" element={<MyReviewsPage />} />
           <Route path="/profile/history" element={<HistoryPage />} />
           <Route path="/profile/edit" element={<EditProfilePage />} />
 

@@ -1,4 +1,5 @@
 import type { User } from '@/types/user'
+import type { Review, PaginatedResponse } from '@/types'
 import request from '@/services/request'
 
 export const userService = {
@@ -19,5 +20,12 @@ export const userService = {
   async updateProfile(data: Partial<User>): Promise<User> {
     const response = await request.put('/users/me', data)
     return response as unknown as User
+  },
+
+  async getMyReviews(page = 1, pageSize = 20): Promise<PaginatedResponse<Review>> {
+    const response = await request.get('/users/me/reviews', {
+      params: { page, pageSize },
+    })
+    return response as unknown as PaginatedResponse<Review>
   },
 }

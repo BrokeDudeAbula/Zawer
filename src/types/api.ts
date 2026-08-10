@@ -48,6 +48,7 @@ export interface Review {
   id: string
   merchantId: string
   userId: string
+  merchantName?: string
   userName: string
   userAvatar?: string
   rating: number

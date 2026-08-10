@@ -4,12 +4,13 @@ import { merchantService } from '@/services'
 import { useFavorites } from '@/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import LoginGuard from '@/components/LoginGuard'
+import type { Merchant } from '@/types'
 
 export default function FavoritesPage() {
   const navigate = useNavigate()
-    const { isLoggedIn } = useAuth()
+  const { isLoggedIn } = useAuth()
   const { favorites, isFavorited, toggleFavorite } = useFavorites()
-  const [merchants, setMerchants] = useState<any[]>([])
+  const [merchants, setMerchants] = useState<Merchant[]>([])
   const [loading, setLoading] = useState(true)
   const [showLoginGuard, setShowLoginGuard] = useState(false)
 
@@ -17,14 +18,18 @@ export default function FavoritesPage() {
     async function loadFavorites() {
       try {
         setLoading(true)
-        const favoriteIds = favorites
+        if (favorites.length === 0) {
+          setMerchants([])
+          return
+        }
+
         const merchantDetails = await Promise.all(
-          favoriteIds.map((id) => merchantService.getById(id)),
+          favorites.map((id) => merchantService.getById(id)),
         )
-        const validMerchants = merchantDetails.filter((m): m is NonNullable<typeof m> => m !== undefined)
-        setMerchants(validMerchants)
+        setMerchants(merchantDetails)
       } catch (err) {
         console.error('Failed to load favorites:', err)
+        setMerchants([])
       } finally {
         setLoading(false)
       }
@@ -58,13 +63,28 @@ export default function FavoritesPage() {
             className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             返回
           </button>
           <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
-            <svg className="mb-4 h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <svg
+              className="mb-4 h-16 w-16 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
             </svg>
             <p className="text-lg text-gray-600">请先登录查看收藏</p>
             <button
@@ -88,7 +108,12 @@ export default function FavoritesPage() {
           className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           返回
         </button>
@@ -101,8 +126,18 @@ export default function FavoritesPage() {
           </div>
         ) : merchants.length === 0 ? (
           <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
-            <svg className="mb-4 h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            <svg
+              className="mb-4 h-16 w-16 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
             </svg>
             <p className="text-lg text-gray-600">暂无收藏，去发现好商家吧！</p>
           </div>
@@ -112,7 +147,7 @@ export default function FavoritesPage() {
               <div
                 key={merchant.id}
                 className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300"
-                onClick={() => navigate(`/merchants/${merchant.id}`)}
+                onClick={() => navigate(`/merchant/${merchant.id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

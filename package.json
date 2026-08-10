@@ -6,6 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:client": "vite",
+    "dev:server": "npm --prefix server run start:dev",
+    "demo": "node scripts/demo.mjs",
+    "demo:seed": "npm run seed:server && npm run demo",
+    "seed:server": "npm --prefix server run seed",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint src/ --max-warnings 0",

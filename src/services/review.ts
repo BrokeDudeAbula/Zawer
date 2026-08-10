@@ -1,6 +1,14 @@
 import type { Review, PaginatedResponse } from '@/types'
 import request from '@/services/request'
 
+export interface CreateReviewPayload {
+  merchantId: string
+  rating: number
+  content: string
+  dimensionRatings?: Review['dimensionRatings']
+  images?: string[]
+}
+
 export const reviewService = {
   async getByMerchantId(
     merchantId: string,
@@ -14,7 +22,7 @@ export const reviewService = {
     return response as unknown as PaginatedResponse<Review>
   },
 
-  async addReview(review: Omit<Review, 'id' | 'likes' | 'createdAt'>): Promise<Review> {
+  async addReview(review: CreateReviewPayload): Promise<Review> {
     const response = await request.post('/reviews', review)
     return response as unknown as Review
   },

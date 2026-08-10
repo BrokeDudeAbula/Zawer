@@ -47,8 +47,6 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
       setSubmitting(true)
       await reviewService.addReview({
         merchantId,
-        userId: 'current-user',
-        userName: '当前用户',
         rating: overallRating,
         dimensionRatings:
           dimensionRatings.environment > 0 ||
@@ -85,10 +83,7 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -99,7 +94,12 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -110,15 +110,9 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              总体评分
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-3">总体评分</label>
             <div className="flex flex-col items-center">
-              <RatingStars
-                value={overallRating}
-                onChange={setOverallRating}
-                size="lg"
-              />
+              <RatingStars value={overallRating} onChange={setOverallRating} size="lg" />
               {overallRating > 0 && (
                 <span className="text-4xl mt-3">{getZawerEmoji(5 - overallRating + 1)}</span>
               )}
@@ -166,9 +160,7 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              点评内容
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">点评内容</label>
             <textarea
               value={content}
               onChange={(e) => {
@@ -179,16 +171,16 @@ export const RatingDialog: React.FC<RatingDialogProps> = ({
               rows={4}
               maxLength={500}
               className={`w-full px-3 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow ${
-                showError && content.trim().length === 0
-                  ? 'border-red-500'
-                  : 'border-gray-300'
+                showError && content.trim().length === 0 ? 'border-red-500' : 'border-gray-300'
               }`}
             />
             <div className="flex justify-between mt-1">
               {showError && content.trim().length === 0 && (
                 <span className="text-xs text-red-500">请输入点评内容</span>
               )}
-              <span className={`text-xs ${content.length >= 500 ? 'text-red-500' : 'text-gray-400'} ml-auto`}>
+              <span
+                className={`text-xs ${content.length >= 500 ? 'text-red-500' : 'text-gray-400'} ml-auto`}
+              >
                 {content.length}/500
               </span>
             </div>

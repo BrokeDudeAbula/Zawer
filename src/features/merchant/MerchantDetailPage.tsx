@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { merchantService, reviewService } from '@/services'
 import { Merchant, Review } from '@/types/api'
 import { useFavorites, useBrowseHistory } from '@/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import LoginGuard from '@/components/LoginGuard'
+import { RatingDialog } from '@/features/review/components/RatingDialog'
 import ZawerScore from './components/ZawerScore'
 import DimensionBar from './components/DimensionBar'
 import MerchantInfo from './components/MerchantInfo'
@@ -13,7 +14,7 @@ import ReviewList from './components/ReviewList'
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { requireAuth } = useAuth()
+  const { isLoggedIn } = useAuth()
   const { isFavorited, toggleFavorite } = useFavorites()
   const { addHistory } = useBrowseHistory()
   const [merchant, setMerchant] = useState<Merchant | null>(null)
@@ -22,49 +23,47 @@ export default function MerchantDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [reviewsLoading, setReviewsLoading] = useState(false)
   const [showLoginGuard, setShowLoginGuard] = useState(false)
+  const [showRatingDialog, setShowRatingDialog] = useState(false)
 
-  useEffect(() => {
-    if (!id) return
-
-    async function loadMerchant() {
+  const loadMerchant = useCallback(
+    async (merchantId: string) => {
       try {
         setLoading(true)
         setError(null)
-        const merchant = await merchantService.getById(id as string)
-        if (merchant) {
-          setMerchant(merchant)
-          addHistory(merchant)
-        } else {
-          setError('商家不存在')
-        }
+        const nextMerchant = await merchantService.getById(merchantId)
+        setMerchant(nextMerchant)
+        addHistory(nextMerchant)
       } catch (err) {
         setError('加载商家信息失败')
         console.error('Failed to load merchant:', err)
       } finally {
         setLoading(false)
       }
-    }
+    },
+    [addHistory],
+  )
 
-    loadMerchant()
-  }, [id, addHistory])
+  const loadReviews = useCallback(async (merchantId: string) => {
+    try {
+      setReviewsLoading(true)
+      const response = await reviewService.getByMerchantId(merchantId, 1, 10, 'time')
+      setReviews(response.list)
+    } catch (err) {
+      console.error('Failed to load reviews:', err)
+    } finally {
+      setReviewsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!id) return
+    loadMerchant(id)
+  }, [id, loadMerchant])
 
   useEffect(() => {
     if (!merchant) return
-
-    async function loadReviews() {
-      try {
-        setReviewsLoading(true)
-        const response = await reviewService.getByMerchantId(merchant!.id, 1, 10, 'time')
-        setReviews(response.list)
-      } catch (err) {
-        console.error('Failed to load reviews:', err)
-      } finally {
-        setReviewsLoading(false)
-      }
-    }
-
-    loadReviews()
-  }, [merchant])
+    loadReviews(merchant.id)
+  }, [merchant, loadReviews])
 
   if (loading) {
     return (
@@ -92,13 +91,28 @@ export default function MerchantDetailPage() {
   }
 
   const handleToggleFavorite = () => {
-    if (!requireAuth()) {
+    if (!isLoggedIn) {
       setShowLoginGuard(true)
       return
     }
     if (merchant) {
       toggleFavorite(merchant.id)
     }
+  }
+
+  const handleOpenRating = () => {
+    if (!isLoggedIn) {
+      setShowLoginGuard(true)
+      return
+    }
+    setShowRatingDialog(true)
+  }
+
+  const handleReviewSubmitted = async () => {
+    if (!merchant) {
+      return
+    }
+    await Promise.all([loadMerchant(merchant.id), loadReviews(merchant.id)])
   }
 
   return (
@@ -110,7 +124,12 @@ export default function MerchantDetailPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             返回
           </button>
@@ -149,19 +168,29 @@ export default function MerchantDetailPage() {
           )}
 
           <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="mb-4 font-semibold text-gray-900">
-              点评 ({merchant.reviewCount})
-            </h3>
+            <h3 className="mb-4 font-semibold text-gray-900">点评 ({merchant.reviewCount})</h3>
             <ReviewList reviews={reviews} loading={reviewsLoading} />
           </div>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
-        <button className="w-full rounded-lg bg-blue-600 py-3 text-white font-medium hover:bg-blue-700 transition-colors">
+        <button
+          onClick={handleOpenRating}
+          className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+        >
           我要评分
         </button>
       </div>
+      {merchant && (
+        <RatingDialog
+          merchantId={merchant.id}
+          merchantName={merchant.name}
+          isOpen={showRatingDialog}
+          onClose={() => setShowRatingDialog(false)}
+          onSubmitted={handleReviewSubmitted}
+        />
+      )}
       <LoginGuard isOpen={showLoginGuard} onClose={() => setShowLoginGuard(false)} />
     </div>
   )

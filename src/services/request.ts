@@ -1,4 +1,10 @@
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig, type AxiosResponse, type AxiosError } from 'axios'
+import axios, {
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+  type AxiosResponse,
+  type AxiosError,
+} from 'axios'
+import { getStoredAuthToken } from '@/utils/auth'
 
 const request: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -11,7 +17,7 @@ const request: AxiosInstance = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token')
+    const token = getStoredAuthToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -24,7 +30,10 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse) => response.data,
   (error: AxiosError) => {
-    const message = (error.response?.data as any)?.message || '网络请求失败，请稍后重试'
+    const responseData = error.response?.data as { message?: string | string[] } | undefined
+    const message = Array.isArray(responseData?.message)
+      ? responseData.message.join(', ')
+      : responseData?.message || '网络请求失败，请稍后重试'
     console.error('[API Error]', message)
     return Promise.reject(error)
   },

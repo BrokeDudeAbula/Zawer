@@ -76,7 +76,7 @@ export default function HistoryPage() {
     <div
       key={item.merchantId}
       className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300"
-      onClick={() => navigate(`/merchants/${item.merchantId}`)}
+      onClick={() => navigate(`/merchant/${item.merchantId}`)}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -118,7 +118,12 @@ export default function HistoryPage() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
             返回
           </button>
@@ -135,8 +140,18 @@ export default function HistoryPage() {
 
         {!hasHistory ? (
           <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
-            <svg className="mb-4 h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="mb-4 h-16 w-16 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             <p className="text-lg text-gray-600">暂无浏览记录</p>
           </div>
