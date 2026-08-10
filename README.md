@@ -114,6 +114,87 @@ npm install
 npm run dev
 ```
 
+## 🧪 本地 Demo 运行方式
+
+当前仓库的本地演示模式需要同时启动前端和后端，并在根目录准备一份本地配置文件。
+
+### 1. 安装依赖
+
+在仓库根目录执行：
+
+```bash
+npm install
+cd server && npm install && cd ..
+```
+
+### 2. 创建本地配置文件
+
+复制根目录模板：
+
+```bash
+cp .env.local.example .env.local
+```
+
+然后至少补齐以下配置：
+
+```env
+VITE_AMAP_KEY=你的高德地图Key
+VITE_AMAP_SECRET=你的高德地图Secret
+JWT_SECRET=你自己的本地JWT密钥
+```
+
+说明：
+
+- 前端默认运行在 `http://localhost:3000`
+- 后端默认运行在 `http://localhost:4000`
+- 前端默认通过 `VITE_API_BASE_URL=/api` 走本地代理访问后端
+
+### 3. 初始化演示数据
+
+```bash
+npm run seed:server
+```
+
+这一步会写入本地 SQLite 演示数据，包括：
+
+- 测试用户
+- 商家列表
+- 点评数据
+
+### 4. 一键启动 Demo
+
+推荐直接执行：
+
+```bash
+npm run demo:seed
+```
+
+如果你不想每次都重置数据，也可以执行：
+
+```bash
+npm run demo
+```
+
+启动后访问：
+
+- 前端页面：`http://localhost:3000`
+- 后端 Swagger：`http://localhost:4000/api-docs`
+
+### 5. 演示登录方式
+
+当前本地 demo 使用演示验证码逻辑：
+
+- 手机号：任意合法 11 位手机号
+- 验证码：`1234`
+
+### 6. 常见问题
+
+- 地图加载失败：通常是 `.env.local` 中没有正确填写 `VITE_AMAP_KEY`
+- 接口请求失败：请确认后端已经启动，且端口为 `4000`
+- 登录后状态异常：可尝试清空浏览器本地存储中的 `auth-storage` 和 `token`
+
+更完整的本地演示说明见 `/Users/liyang/Desktop/abula_project/Zawer/docs/LOCAL_DEMO.md`
+
 ## 🤝 如何贡献 (Contributing)
 
 欢迎提交 Issue 或 Pull Request！请查阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解更多详情。
