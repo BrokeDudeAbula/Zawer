@@ -25,7 +25,7 @@ export function useAMap({ container, center, zoom = 14 }: UseAMapOptions) {
         const AMap = await AMapLoader.load({
           key: import.meta.env.VITE_AMAP_KEY || '',
           version: '2.0',
-          plugins: ['AMap.Geolocation', 'AMap.MarkerCluster', 'AMap.InfoWindow'],
+          plugins: ['AMap.Geolocation', 'AMap.MarkerCluster', 'AMap.InfoWindow', 'AMap.HeatMap'],
         })
 
         map = new AMap.Map(container.current, {

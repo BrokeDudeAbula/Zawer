@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import type { Merchant } from '@/types'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useMerchants } from '@/hooks/useMerchants'
@@ -8,9 +9,11 @@ import MapContainer from './components/MapContainer'
 import LocationMarker from './components/LocationMarker'
 import LocationPermissionTip from './components/LocationPermissionTip'
 import MerchantMarkers from './components/MerchantMarkers'
+import ZawerHeatmap from './components/ZawerHeatmap'
 import MerchantInfoCard from './components/MerchantInfoCard'
 import LocateButton from './components/LocateButton'
-import { FilterButton } from './components/FilterButton'
+import MapSearchBar from './components/MapSearchBar'
+import CategoryChips from './components/CategoryChips'
 import { FilterPanel } from './components/FilterPanel'
 
 export default function MapPage() {
@@ -27,11 +30,26 @@ export default function MapPage() {
     loading: locationLoading,
   } = useGeolocation()
 
-  // 商家数据
-  const { merchants } = useMerchants()
+  // 商家数据（库中只存被评分过的真实商家）
+  const { merchants, loading: merchantsLoading } = useMerchants()
 
   // 筛选条件
-  const { filters } = useAppStore()
+  const { filters, setFilters } = useAppStore()
+
+  // 分类 chips 取自库中实际存在的商家分类，保证点选后一定有结果
+  const availableCategories = useMemo(() => {
+    return Array.from(new Set(merchants.map((merchant) => merchant.category))).slice(0, 12)
+  }, [merchants])
+
+  const handleCategoryToggle = useCallback(
+    (category: string) => {
+      const next = filters.category.includes(category)
+        ? filters.category.filter((item) => item !== category)
+        : [...filters.category, category]
+      setFilters({ category: next })
+    },
+    [filters.category, setFilters],
+  )
 
   // 应用筛选逻辑
   const filteredMerchants = useMemo(() => {
@@ -41,11 +59,8 @@ export default function MapPage() {
         return false
       }
 
-      // Zawer 等级筛选
-      if (
-        merchant.zawerIndex < filters.zawerLevel[0] ||
-        merchant.zawerIndex > filters.zawerLevel[1]
-      ) {
+      // Zawer 计数筛选
+      if (merchant.zawerCount < filters.zawerMin) {
         return false
       }
 
@@ -55,7 +70,7 @@ export default function MapPage() {
           userPosition.lat,
           userPosition.lng,
           merchant.lat,
-          merchant.lng
+          merchant.lng,
         )
         if (distance > filters.distance) {
           return false
@@ -68,12 +83,7 @@ export default function MapPage() {
 
   // 判断是否有活跃的筛选条件
   const hasActiveFilters = useMemo(() => {
-    return (
-      filters.category.length > 0 ||
-      filters.zawerLevel[0] !== 1 ||
-      filters.zawerLevel[1] !== 5 ||
-      filters.distance !== 3000
-    )
+    return filters.category.length > 0 || filters.zawerMin > 0 || filters.distance !== 3000
   }, [filters])
 
   // 地图就绪回调
@@ -111,15 +121,14 @@ export default function MapPage() {
 
   return (
     <div className="relative h-full w-full">
-      <MapContainer
-        center={center}
-        zoom={14}
-        onMapReady={handleMapReady}
-      >
+      <MapContainer center={center} zoom={14} onMapReady={handleMapReady}>
         {/* 用户位置标记 */}
         {userPosition && mapRef.current && (
           <LocationMarker map={mapRef.current} position={userPosition} />
         )}
+
+        {/* Zawer 热力图（在标注之下） */}
+        {mapRef.current && <ZawerHeatmap map={mapRef.current} merchants={filteredMerchants} />}
 
         {/* 商家标注 */}
         {mapRef.current && (
@@ -131,6 +140,36 @@ export default function MapPage() {
         )}
       </MapContainer>
 
+      {/* 顶部悬浮层：搜索栏 + 分类 chips */}
+      <div className="absolute inset-x-0 top-0 z-20 space-y-2 px-3 pt-3">
+        <MapSearchBar />
+        {availableCategories.length > 0 && (
+          <CategoryChips
+            categories={availableCategories}
+            selected={filters.category}
+            onToggle={handleCategoryToggle}
+            onOpenFilter={() => setIsFilterOpen(true)}
+            hasActiveFilters={hasActiveFilters}
+          />
+        )}
+      </div>
+
+      {/* 空状态引导：库中尚无任何被评分的商家 */}
+      {!merchantsLoading && merchants.length === 0 && (
+        <div className="absolute inset-x-0 top-20 z-10 flex justify-center px-4">
+          <div className="max-w-xs rounded-gm-lg bg-white px-4 py-3 text-center shadow-gm-2">
+            <p className="text-gm-base font-medium text-ink-primary">地图上还没有商家</p>
+            <p className="mt-1 text-gm-sm text-ink-secondary">这里只显示被真人评过分的店</p>
+            <Link
+              to="/search"
+              className="mt-2.5 inline-block rounded-pill bg-gm-blue px-4 py-1.5 text-gm-base font-medium text-white transition-colors hover:bg-gm-blue-hover"
+            >
+              去搜索并评分
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* 定位权限提示 */}
       <LocationPermissionTip
         error={locationError}
@@ -138,20 +177,17 @@ export default function MapPage() {
         onRetry={locate}
       />
 
-      {/* 筛选按钮 */}
-      <FilterButton
-        onClick={() => setIsFilterOpen(true)}
-        hasActiveFilters={hasActiveFilters}
-      />
-
       {/* 筛选面板 */}
-      <FilterPanel
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-      />
+      <FilterPanel isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
 
-      {/* 回到我的位置按钮 */}
-      <LocateButton onClick={handleLocate} loading={locationLoading} />
+      {/* 右下角悬浮按钮，位置随底部卡片是否显示调整 */}
+      <div
+        className={`absolute right-4 z-20 transition-all duration-200 ${
+          selectedMerchant ? 'bottom-48' : 'bottom-6'
+        }`}
+      >
+        <LocateButton onClick={handleLocate} loading={locationLoading} />
+      </div>
 
       {/* 商家信息卡片 */}
       <MerchantInfoCard

@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { JwtService } from '@nestjs/jwt'
 import { User } from '../../entities/user.entity'
-import { Review } from '../../entities/review.entity'
+import { ZawerVote } from '../../entities/zawer-vote.entity'
 import { Favorite } from '../../entities/favorite.entity'
 
-interface UserWithCounts extends User {
-  reviewCount: number
+export interface UserWithCounts extends User {
+  zawerVoteCount: number
   likeCount: number
   favoriteCount: number
 }
@@ -17,8 +17,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Review)
-    private reviewRepository: Repository<Review>,
+    @InjectRepository(ZawerVote)
+    private voteRepository: Repository<ZawerVote>,
     @InjectRepository(Favorite)
     private favoriteRepository: Repository<Favorite>,
     private jwtService: JwtService,
@@ -62,14 +62,14 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在')
     }
 
-    const [reviewCount, favoriteCount] = await Promise.all([
-      this.reviewRepository.count({ where: { userId } }),
+    const [zawerVoteCount, favoriteCount] = await Promise.all([
+      this.voteRepository.count({ where: { userId } }),
       this.favoriteRepository.count({ where: { userId } }),
     ])
 
     return {
       ...user,
-      reviewCount,
+      zawerVoteCount,
       likeCount: 0,
       favoriteCount,
     }

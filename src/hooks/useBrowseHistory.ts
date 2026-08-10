@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import type { Merchant } from '@/types'
 
 const STORAGE_KEY = 'zawer_browse_history'
@@ -7,7 +8,7 @@ interface BrowseHistoryItem {
   merchantId: string
   merchantName: string
   category: string
-  zawerIndex: number
+  zawerCount: number
   visitedAt: string
 }
 
@@ -29,7 +30,9 @@ const saveHistoryToStorage = (history: BrowseHistoryItem[]) => {
 }
 
 export function useBrowseHistory() {
-  const addHistory = (merchant: Merchant) => {
+  // 历史记录只存在 localStorage 里，不依赖组件状态，因此可以返回完全稳定的引用。
+  // 调用方会把 addHistory 放进 useCallback / useEffect 依赖，引用不稳定会导致无限重渲染。
+  const addHistory = useCallback((merchant: Merchant) => {
     const history = getHistoryFromStorage()
     const existingIndex = history.findIndex((item) => item.merchantId === merchant.id)
 
@@ -37,7 +40,7 @@ export function useBrowseHistory() {
       merchantId: merchant.id,
       merchantName: merchant.name,
       category: merchant.category,
-      zawerIndex: merchant.zawerIndex,
+      zawerCount: merchant.zawerCount,
       visitedAt: new Date().toISOString(),
     }
 
@@ -52,15 +55,15 @@ export function useBrowseHistory() {
     }
 
     saveHistoryToStorage(history)
-  }
+  }, [])
 
-  const getHistory = (): BrowseHistoryItem[] => {
+  const getHistory = useCallback((): BrowseHistoryItem[] => {
     return getHistoryFromStorage()
-  }
+  }, [])
 
-  const clearHistory = () => {
+  const clearHistory = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
-  }
+  }, [])
 
   return {
     addHistory,

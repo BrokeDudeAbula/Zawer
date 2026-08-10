@@ -22,4 +22,11 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
+  {
+    // 高德地图 JS SDK 未提供官方类型定义，承接 SDK 实例的地图代码只能用 any
+    files: ['src/hooks/useAMap.ts', 'src/features/map/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 )

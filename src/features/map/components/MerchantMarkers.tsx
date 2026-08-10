@@ -8,11 +8,18 @@ interface MerchantMarkersProps {
   onMarkerClick?: (merchant: Merchant) => void
 }
 
-/**
- * 创建自定义 Marker 内容
- */
+const GM_SHADOW = '0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15)'
+
+function escapeHtml(text: string): string {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+// 仿 Google Maps 的地点标签：白底深色字，用左侧圆点表达 Zawer 等级
 function createMarkerContent(merchant: Merchant): HTMLElement {
-  const color = getZawerColor(merchant.zawerIndex)
+  const color = getZawerColor(merchant.zawerCount)
+  const name = merchant.name.length > 8 ? `${merchant.name.slice(0, 8)}…` : merchant.name
   const el = document.createElement('div')
   el.style.cssText = 'cursor: pointer; user-select: none;'
   el.innerHTML = `
@@ -23,44 +30,42 @@ function createMarkerContent(merchant: Merchant): HTMLElement {
       transform: translate(-50%, -100%);
     ">
       <div style="
-        background: ${color};
-        color: white;
-        padding: 4px 8px;
-        border-radius: 12px;
+        background: #ffffff;
+        color: #202124;
+        padding: 5px 10px 5px 8px;
+        border-radius: 8px;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 500;
         white-space: nowrap;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: ${GM_SHADOW};
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
       ">
-        <span>${merchant.name.length > 4 ? merchant.name.slice(0, 4) + '...' : merchant.name}</span>
         <span style="
-          background: rgba(255,255,255,0.3);
-          padding: 1px 4px;
-          border-radius: 6px;
-          font-size: 11px;
-        ">${merchant.zawerIndex.toFixed(1)}</span>
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: ${color};
+          flex-shrink: 0;
+        "></span>
+        <span>${escapeHtml(name)}</span>
+        <span style="color: ${color}; font-weight: 600;">${merchant.zawerCount}</span>
       </div>
       <div style="
         width: 0;
         height: 0;
-        border-left: 6px solid transparent;
-        border-right: 6px solid transparent;
-        border-top: 6px solid ${color};
-        margin-top: -1px;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid #ffffff;
+        filter: drop-shadow(0 1px 1px rgba(60,64,67,.25));
       "></div>
     </div>
   `
   return el
 }
 
-export default function MerchantMarkers({
-  map,
-  merchants,
-  onMarkerClick,
-}: MerchantMarkersProps) {
+export default function MerchantMarkers({ map, merchants, onMarkerClick }: MerchantMarkersProps) {
   const markersRef = useRef<any[]>([])
   const clusterRef = useRef<any>(null)
 
@@ -116,16 +121,16 @@ export default function MerchantMarkers({
             <div style="
               width: 40px;
               height: 40px;
-              background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+              background: #1a73e8;
               border-radius: 50%;
               display: flex;
               align-items: center;
               justify-content: center;
               color: white;
               font-size: 14px;
-              font-weight: 700;
-              box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
-              border: 2px solid white;
+              font-weight: 500;
+              box-shadow: ${GM_SHADOW};
+              border: 2px solid #ffffff;
             ">${count}</div>
           `
           ctx.marker.setContent(el)

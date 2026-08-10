@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { resolve } from 'path'
 import { AuthModule } from './modules/auth/auth.module'
 import { MerchantsModule } from './modules/merchants/merchants.module'
-import { ReviewsModule } from './modules/reviews/reviews.module'
+import { VotesModule } from './modules/votes/votes.module'
 import { UsersModule } from './modules/users/users.module'
 
 @Module({
@@ -28,7 +28,7 @@ import { UsersModule } from './modules/users/users.module'
     }),
     AuthModule,
     MerchantsModule,
-    ReviewsModule,
+    VotesModule,
     UsersModule,
   ],
 })

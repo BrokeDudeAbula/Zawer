@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getZawerColor } from '@/utils/zawer'
 import { useNavigate } from 'react-router-dom'
 import { useBrowseHistory } from '@/hooks'
 
@@ -6,7 +7,7 @@ interface BrowseHistoryItem {
   merchantId: string
   merchantName: string
   category: string
-  zawerIndex: number
+  zawerCount: number
   visitedAt: string
 }
 
@@ -59,12 +60,6 @@ export default function HistoryPage() {
     setShowClearConfirm(false)
   }
 
-  const getZawerIndexColor = (index: number) => {
-    if (index >= 4) return 'text-green-600'
-    if (index >= 3) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   const formatTime = (isoString: string) => {
     const date = new Date(isoString)
     const hours = date.getHours().toString().padStart(2, '0')
@@ -75,20 +70,20 @@ export default function HistoryPage() {
   const renderHistoryItem = (item: BrowseHistoryItem) => (
     <div
       key={item.merchantId}
-      className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300"
+      className="cursor-pointer rounded-gm border border-outline bg-white p-4 hover:border-outline"
       onClick={() => navigate(`/merchant/${item.merchantId}`)}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{item.merchantName}</h3>
+          <h3 className="text-lg font-semibold text-ink-primary">{item.merchantName}</h3>
           <div className="mt-1 flex items-center gap-2">
-            <span className={`font-semibold ${getZawerIndexColor(item.zawerIndex)}`}>
-              Zawer 指数 {item.zawerIndex.toFixed(1)}
+            <span className="font-medium" style={{ color: getZawerColor(item.zawerCount) }}>
+              {item.zawerCount} 人说坑
             </span>
-            <span className="text-gray-400">|</span>
-            <span className="text-sm text-gray-600">{item.category}</span>
+            <span className="text-ink-tertiary">|</span>
+            <span className="text-sm text-ink-secondary">{item.category}</span>
           </div>
-          <p className="mt-1 text-sm text-gray-500">浏览于 {formatTime(item.visitedAt)}</p>
+          <p className="mt-1 text-sm text-ink-secondary">浏览于 {formatTime(item.visitedAt)}</p>
         </div>
       </div>
     </div>
@@ -98,7 +93,7 @@ export default function HistoryPage() {
     if (items.length === 0) return null
     return (
       <div className="mb-6">
-        <h3 className="mb-3 text-sm font-semibold text-gray-500">{title}</h3>
+        <h3 className="mb-3 text-sm font-semibold text-ink-secondary">{title}</h3>
         <div className="space-y-3">{items.map(renderHistoryItem)}</div>
       </div>
     )
@@ -110,12 +105,12 @@ export default function HistoryPage() {
     groupedHistory.earlier.length > 0
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-full overflow-y-auto bg-surface-hover">
       <div className="mx-auto max-w-2xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="flex items-center gap-2 text-ink-secondary hover:text-ink-primary"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -127,11 +122,11 @@ export default function HistoryPage() {
             </svg>
             返回
           </button>
-          <h1 className="text-xl font-bold text-gray-900">浏览历史</h1>
+          <h1 className="text-xl font-bold text-ink-primary">浏览历史</h1>
           {hasHistory && (
             <button
               onClick={() => setShowClearConfirm(true)}
-              className="text-sm text-red-600 hover:text-red-700"
+              className="text-sm text-gm-red hover:text-red-700"
             >
               清空
             </button>
@@ -139,9 +134,9 @@ export default function HistoryPage() {
         </div>
 
         {!hasHistory ? (
-          <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
+          <div className="flex h-[60vh] flex-col items-center justify-center rounded-gm border border-outline bg-white p-8">
             <svg
-              className="mb-4 h-16 w-16 text-gray-400"
+              className="mb-4 h-16 w-16 text-ink-tertiary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -153,7 +148,7 @@ export default function HistoryPage() {
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-lg text-gray-600">暂无浏览记录</p>
+            <p className="text-lg text-ink-secondary">暂无浏览记录</p>
           </div>
         ) : (
           <div>
@@ -166,19 +161,19 @@ export default function HistoryPage() {
 
       {showClearConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-80 rounded-lg bg-white p-6">
-            <h3 className="mb-2 text-lg font-semibold text-gray-900">确认清空</h3>
-            <p className="mb-4 text-gray-600">确定要清空所有浏览记录吗？</p>
+          <div className="w-80 rounded-gm bg-white p-6">
+            <h3 className="mb-2 text-lg font-semibold text-ink-primary">确认清空</h3>
+            <p className="mb-4 text-ink-secondary">确定要清空所有浏览记录吗？</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowClearConfirm(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                className="rounded-gm border border-outline px-4 py-2 text-ink-primary hover:bg-surface-hover"
               >
                 取消
               </button>
               <button
                 onClick={handleClearHistory}
-                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                className="rounded-gm bg-gm-red px-4 py-2 text-white hover:bg-red-700"
               >
                 清空
               </button>

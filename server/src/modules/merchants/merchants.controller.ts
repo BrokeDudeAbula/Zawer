@@ -1,7 +1,8 @@
-import { Controller, Get, Query, Param, UsePipes, ValidationPipe } from '@nestjs/common'
+import { Controller, Get, Post, Body, Query, Param, UsePipes, ValidationPipe } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger'
 import { MerchantsService } from './merchants.service'
 import { QueryMerchantsDto } from './dto/query-merchants.dto'
+import { QueryScoresDto } from './dto/query-scores.dto'
 
 @ApiTags('merchants')
 @Controller('merchants')
@@ -28,6 +29,13 @@ export class MerchantsController {
   @ApiQuery({ name: 'keyword', required: true, type: String })
   async search(@Query('keyword') keyword: string) {
     return this.merchantsService.search(keyword)
+  }
+
+  @Post('scores')
+  @ApiOperation({ summary: '按高德 POI ID 批量查询 Zawer 评分' })
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  async getScores(@Body() dto: QueryScoresDto) {
+    return this.merchantsService.getScoresByPoiIds(dto.poiIds)
   }
 
   @Get(':id')

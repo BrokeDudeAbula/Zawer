@@ -30,10 +30,10 @@ export default function LocationMarker({ map, position }: LocationMarkerProps) {
           transform: translate(-50%, -50%);
           width: 12px;
           height: 12px;
-          background: #3b82f6;
+          background: #1a73e8;
           border: 3px solid #ffffff;
           border-radius: 50%;
-          box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+          box-shadow: 0 0 6px rgba(26,115,232,.45);
           z-index: 2;
         "></div>
         <div style="
@@ -43,7 +43,7 @@ export default function LocationMarker({ map, position }: LocationMarkerProps) {
           transform: translate(-50%, -50%);
           width: 24px;
           height: 24px;
-          background: rgba(59, 130, 246, 0.2);
+          background: rgba(26, 115, 232, 0.2);
           border-radius: 50%;
           animation: pulse 2s ease-in-out infinite;
           z-index: 1;

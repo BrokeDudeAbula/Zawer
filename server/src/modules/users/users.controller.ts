@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Post,
-  Delete,
-  Param,
-  Body,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common'
+import { Controller, Get, Put, Post, Delete, Param, Body, UseGuards, Request } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import { UsersService } from './users.service'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -42,21 +31,6 @@ export class UsersController {
   @ApiResponse({ status: 200, description: '获取成功' })
   async getFavorites(@Request() req) {
     return this.usersService.getFavorites(req.user.id)
-  }
-
-  @Get('me/reviews')
-  @ApiOperation({ summary: '获取当前用户点评列表' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  async getMyReviews(
-    @Request() req,
-    @Query('page') page?: number,
-    @Query('pageSize') pageSize?: number,
-  ) {
-    return this.usersService.getMyReviews(
-      req.user.id,
-      page ? Number(page) : 1,
-      pageSize ? Number(pageSize) : 20,
-    )
   }
 
   @Post('me/favorites')

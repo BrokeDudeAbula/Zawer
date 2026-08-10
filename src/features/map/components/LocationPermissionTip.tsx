@@ -12,18 +12,17 @@ export default function LocationPermissionTip({
   if (!error) return null
 
   return (
-    <div className="absolute left-4 right-4 top-4 z-50 rounded-lg bg-white p-3 shadow-lg">
-      <div className="flex items-start gap-3">
-        <span className="text-xl">{permissionDenied ? '📍' : '⚠️'}</span>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-900">
+    <div className="absolute inset-x-3 bottom-6 z-30 rounded-gm bg-ink-primary px-4 py-3 shadow-gm-3">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-gm-base font-medium text-white">
             {permissionDenied ? '定位权限未授权' : '定位失败'}
           </p>
-          <p className="mt-1 text-xs text-gray-500">{error}</p>
+          <p className="mt-0.5 text-gm-sm text-white/70">{error}</p>
         </div>
         <button
           onClick={onRetry}
-          className="rounded-md bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
+          className="flex-shrink-0 rounded-pill px-3 py-1.5 text-gm-base font-medium text-[#8ab4f8] transition-colors hover:bg-white/10"
         >
           重试
         </button>

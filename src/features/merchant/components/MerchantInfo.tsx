@@ -4,48 +4,51 @@ interface MerchantInfoProps {
   merchant: Merchant
 }
 
+const rows = [
+  {
+    key: 'address' as const,
+    icon: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z',
+  },
+  {
+    key: 'businessHours' as const,
+    icon: 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20a8 8 0 110-16 8 8 0 010 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+  },
+  {
+    key: 'phone' as const,
+    icon: 'M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24 11.36 11.36 0 003.56.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.56 1 1 0 01-.25 1.02l-2.2 2.21z',
+  },
+]
+
 export default function MerchantInfo({ merchant }: MerchantInfoProps) {
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">{merchant.name}</h1>
-        <span className="mt-1 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
-          {merchant.category}
-        </span>
-      </div>
+    <div>
+      <h1 className="text-gm-xl font-normal text-ink-primary">{merchant.name}</h1>
+      <p className="mt-1 text-gm-base text-ink-secondary">{merchant.category}</p>
 
-      <div className="space-y-3">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <div className="flex-1 text-sm text-gray-600">{merchant.address}</div>
-        </div>
+      <div className="mt-4 space-y-3">
+        {rows.map(({ key, icon }) => {
+          const value = merchant[key]
+          if (!value) return null
 
-        {merchant.businessHours && (
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          return (
+            <div key={key} className="flex items-start gap-4">
+              <svg
+                className="mt-0.5 h-5 w-5 flex-shrink-0 text-ink-secondary"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d={icon} />
               </svg>
+              {key === 'phone' ? (
+                <a href={`tel:${value}`} className="text-gm-base text-gm-blue hover:underline">
+                  {value}
+                </a>
+              ) : (
+                <span className="text-gm-base text-ink-primary">{value}</span>
+              )}
             </div>
-            <div className="flex-1 text-sm text-gray-600">{merchant.businessHours}</div>
-          </div>
-        )}
-
-        {merchant.phone && (
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-            </div>
-            <div className="flex-1 text-sm text-gray-600">{merchant.phone}</div>
-          </div>
-        )}
+          )
+        })}
       </div>
     </div>
   )

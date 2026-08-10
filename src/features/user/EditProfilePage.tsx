@@ -35,7 +35,7 @@ export default function EditProfilePage() {
     try {
       await updateProfile({ nickname: nickname.trim() })
       navigate('/profile')
-    } catch (error) {
+    } catch {
       alert('保存失败，请重试')
     } finally {
       setLoading(false)
@@ -51,22 +51,32 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-full overflow-y-auto bg-surface-hover">
       {/* 顶部导航栏 */}
-      <div className="flex items-center space-x-4 border-b border-gray-200 bg-white px-4 py-4">
+      <div className="flex items-center space-x-4 border-b border-outline bg-white px-4 py-4">
         <button
           onClick={() => navigate(-1)}
-          className="rounded-full p-1 hover:bg-gray-100 transition-colors"
+          className="rounded-full p-1 hover:bg-surface-hover transition-colors"
         >
-          <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="h-6 w-6 text-ink-primary"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
-        <h1 className="flex-1 text-lg font-semibold text-gray-900">编辑资料</h1>
+        <h1 className="flex-1 text-lg font-semibold text-ink-primary">编辑资料</h1>
         <button
           onClick={handleSave}
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-blue-300"
+          className="rounded-gm bg-gm-blue px-4 py-2 font-medium text-white transition-colors hover:bg-gm-blue-hover disabled:bg-blue-300"
         >
           {loading ? '保存中...' : '保存'}
         </button>
@@ -77,34 +87,40 @@ export default function EditProfilePage() {
         <div className="mb-6 flex items-center justify-center">
           <button
             onClick={handleAvatarClick}
-            className="relative flex h-24 w-24 items-center justify-center rounded-full bg-blue-100 text-3xl font-bold text-blue-600 hover:bg-blue-200 transition-colors"
+            className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gm-blue-light text-3xl font-bold text-gm-blue hover:bg-blue-200 transition-colors"
           >
             {user.nickname?.charAt(0) || 'U'}
-            <div className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-gray-800 text-white">
+            <div className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-ink-primary text-white">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
             </div>
           </button>
         </div>
 
         {/* 昵称输入框 */}
-        <div className="rounded-xl bg-white p-4 shadow-sm">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            昵称
-          </label>
+        <div className="rounded-gm-lg bg-white p-4 shadow-gm-1">
+          <label className="mb-2 block text-sm font-medium text-ink-primary">昵称</label>
           <input
             type="text"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             maxLength={20}
             placeholder="请输入昵称"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-gm border border-outline px-4 py-3 focus:border-gm-blue focus:outline-none focus:ring-2 focus:ring-gm-blue/20"
           />
-          <p className="mt-2 text-xs text-gray-500">
-            {nickname.length}/20
-          </p>
+          <p className="mt-2 text-xs text-ink-secondary">{nickname.length}/20</p>
         </div>
       </div>
     </div>

@@ -4,8 +4,7 @@ export interface User {
   nickname: string
   avatar?: string
   createdAt: string
-  reviewCount: number
-  likeCount: number
+  zawerVoteCount: number
   favoriteCount: number
 }
 

@@ -1,27 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
-import { Review } from './review.entity';
-import { Favorite } from './favorite.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm'
+import { ZawerVote } from './zawer-vote.entity'
+import { Favorite } from './favorite.entity'
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string
 
   @Column({ unique: true })
-  phone: string;
+  phone: string
 
   @Column()
-  nickname: string;
+  nickname: string
 
   @Column({ nullable: true })
-  avatar: string;
+  avatar: string
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date
 
-  @OneToMany(() => Review, (review) => review.user)
-  reviews: Review[];
+  @OneToMany(() => ZawerVote, (vote) => vote.user)
+  votes: ZawerVote[]
 
   @OneToMany(() => Favorite, (favorite) => favorite.user)
-  favorites: Favorite[];
+  favorites: Favorite[]
 }

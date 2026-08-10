@@ -33,24 +33,21 @@ export default function MapContainer({
 
       {/* 加载状态 */}
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <div className="text-center">
-            <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-            <p className="text-sm text-gray-500">地图加载中...</p>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-variant">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gm-blue border-t-transparent" />
         </div>
       )}
 
       {/* 错误状态 */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <div className="max-w-sm rounded-lg bg-white p-6 text-center shadow-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-surface-variant">
+          <div className="max-w-sm rounded-gm bg-white p-6 text-center shadow-gm-2">
             <div className="mb-3 text-4xl">🗺️</div>
-            <h3 className="mb-2 text-lg font-semibold text-gray-900">地图加载失败</h3>
-            <p className="mb-4 text-sm text-gray-500">{error}</p>
+            <h3 className="mb-2 text-lg font-semibold text-ink-primary">地图加载失败</h3>
+            <p className="mb-4 text-sm text-ink-secondary">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="rounded-lg bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
+              className="rounded-gm bg-gm-blue px-4 py-2 text-sm text-white hover:bg-gm-blue-hover"
             >
               重新加载
             </button>

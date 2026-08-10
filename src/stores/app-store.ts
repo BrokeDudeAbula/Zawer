@@ -7,7 +7,8 @@ interface AppState {
   // 筛选条件
   filters: {
     category: string[]
-    zawerLevel: [number, number]
+    // 至少被多少人点过 Zawer，0 表示不限
+    zawerMin: number
     distance: number
   }
   setFilters: (filters: Partial<AppState['filters']>) => void
@@ -21,11 +22,10 @@ export const useAppStore = create<AppState>((set) => ({
   setUserLocation: (location) => set({ userLocation: location }),
   filters: {
     category: [],
-    zawerLevel: [1, 5],
+    zawerMin: 0,
     distance: 3000,
   },
-  setFilters: (filters) =>
-    set((state) => ({ filters: { ...state.filters, ...filters } })),
+  setFilters: (filters) => set((state) => ({ filters: { ...state.filters, ...filters } })),
   searchKeyword: '',
   setSearchKeyword: (keyword) => set({ searchKeyword: keyword }),
 }))

@@ -1,44 +1,42 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Review } from './review.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm'
+import { ZawerVote } from './zawer-vote.entity'
 
 @Entity('merchants')
 export class Merchant {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string
+
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  amapPoiId: string | null
 
   @Column()
-  name: string;
+  name: string
 
   @Column()
-  category: string;
+  category: string
 
   @Column()
-  address: string;
+  address: string
 
   @Column({ type: 'float' })
-  lng: number;
+  lng: number
 
   @Column({ type: 'float' })
-  lat: number;
+  lat: number
 
-  @Column({ type: 'float', default: 3.0 })
-  zawerIndex: number;
-
-  @Column({ default: 0 })
-  reviewCount: number;
+  // 被多少人点过 Zawer，数值越大越坑
+  @Column({ type: 'int', default: 0 })
+  zawerCount: number
 
   @Column({ nullable: true })
-  phone: string;
+  phone: string
 
   @Column({ nullable: true })
-  businessHours: string;
+  businessHours: string
 
   @Column({ type: 'text', nullable: true })
-  images: string;
+  images: string
 
-  @Column({ type: 'text', nullable: true })
-  dimensionRatings: string;
-
-  @OneToMany(() => Review, (review) => review.merchant)
-  reviews: Review[];
+  @OneToMany(() => ZawerVote, (vote) => vote.merchant)
+  votes: ZawerVote[]
 }

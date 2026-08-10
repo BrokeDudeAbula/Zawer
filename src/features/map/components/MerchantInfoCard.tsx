@@ -1,6 +1,8 @@
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Merchant } from '@/types'
-import { getZawerColor, getZawerLabel, getZawerEmoji } from '@/utils/zawer'
+import { calculateDistance } from '@/utils/geo'
+import { getZawerColor, getZawerLabel } from '@/utils/zawer'
 
 interface MerchantInfoCardProps {
   merchant: Merchant | null
@@ -8,31 +10,12 @@ interface MerchantInfoCardProps {
   onClose: () => void
 }
 
-/**
- * 计算两点间距离（简化版，单位：米）
- */
-function calculateDistance(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number,
-): number {
-  const R = 6371000
-  const dLat = ((lat2 - lat1) * Math.PI) / 180
-  const dLng = ((lng2 - lng1) * Math.PI) / 180
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
-}
+// 拖拽超过该距离才触发展开/收起，避免误触
+const DRAG_THRESHOLD = 48
 
 function formatDistance(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)}m`
-  return `${(meters / 1000).toFixed(1)}km`
+  if (meters < 1000) return `${Math.round(meters)} m`
+  return `${(meters / 1000).toFixed(1)} km`
 }
 
 export default function MerchantInfoCard({
@@ -41,86 +24,145 @@ export default function MerchantInfoCard({
   onClose,
 }: MerchantInfoCardProps) {
   const navigate = useNavigate()
+  const [expanded, setExpanded] = useState(false)
+  const [dragOffset, setDragOffset] = useState(0)
+  const dragStartRef = useRef<number | null>(null)
+
+  // 切换商家时回到收起状态
+  useEffect(() => {
+    setExpanded(false)
+    setDragOffset(0)
+  }, [merchant?.id])
 
   if (!merchant) return null
 
-  const color = getZawerColor(merchant.zawerIndex)
-  const label = getZawerLabel(merchant.zawerIndex)
-  const emoji = getZawerEmoji(merchant.zawerIndex)
+  const color = getZawerColor(merchant.zawerCount)
+  const label = getZawerLabel(merchant.zawerCount)
+  const distance = userPosition
+    ? calculateDistance(userPosition.lat, userPosition.lng, merchant.lat, merchant.lng)
+    : null
 
-  const distance =
-    userPosition
-      ? calculateDistance(
-          userPosition.lat,
-          userPosition.lng,
-          merchant.lat,
-          merchant.lng,
-        )
-      : null
+  const handlePointerDown = (e: React.PointerEvent) => {
+    dragStartRef.current = e.clientY
+  }
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (dragStartRef.current === null) return
+    // 只对向下拖动做实时位移反馈，向上拖动仅在松手时展开
+    setDragOffset(Math.max(0, e.clientY - dragStartRef.current))
+  }
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (dragStartRef.current === null) return
+    const delta = e.clientY - dragStartRef.current
+
+    if (delta < -DRAG_THRESHOLD) {
+      setExpanded(true)
+    } else if (delta > DRAG_THRESHOLD) {
+      if (expanded) {
+        setExpanded(false)
+      } else {
+        onClose()
+      }
+    }
+
+    dragStartRef.current = null
+    setDragOffset(0)
+  }
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-50 animate-in slide-in-from-bottom">
-      <div className="rounded-xl bg-white p-4 shadow-xl">
-        {/* 关闭按钮 */}
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-3 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+    <div
+      className="absolute inset-x-0 bottom-0 z-30 rounded-t-2xl bg-white shadow-gm-4"
+      style={{
+        transform: `translateY(${dragOffset}px)`,
+        transition: dragStartRef.current === null ? 'transform 200ms ease-out' : 'none',
+      }}
+    >
+      {/* 拖拽区域 */}
+      <div
+        className="flex cursor-grab touch-none justify-center pb-1 pt-2.5 active:cursor-grabbing"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <div className="h-1 w-8 rounded-pill bg-outline" />
+      </div>
 
-        <div className="flex gap-3">
-          {/* Zawer 指数 */}
-          <div
-            className="flex h-14 w-14 flex-shrink-0 flex-col items-center justify-center rounded-lg"
-            style={{ backgroundColor: color + '20' }}
-          >
-            <span className="text-lg">{emoji}</span>
-            <span className="text-xs font-bold" style={{ color }}>
-              {merchant.zawerIndex.toFixed(1)}
-            </span>
-          </div>
-
-          {/* 商家信息 */}
+      <div className="px-4 pb-4">
+        <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-base font-semibold text-gray-900">
-              {merchant.name}
-            </h3>
-            <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+            <h3 className="truncate text-gm-lg font-medium text-ink-primary">{merchant.name}</h3>
+            <div className="mt-1 flex items-center gap-1.5 text-gm-base text-ink-secondary">
+              <span className="font-medium" style={{ color }}>
+                {merchant.zawerCount}
+              </span>
               <span
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                className="rounded-pill px-1.5 py-0.5 text-gm-xs font-medium text-white"
                 style={{ backgroundColor: color }}
               >
                 {label}
               </span>
-              <span>{merchant.category}</span>
-              {distance !== null && (
-                <span>· {formatDistance(distance)}</span>
-              )}
+              <span className="truncate">
+                · {merchant.category}
+                {distance !== null && ` · ${formatDistance(distance)}`}
+              </span>
             </div>
-            <p className="mt-1 truncate text-xs text-gray-400">
-              {merchant.address}
-            </p>
           </div>
+
+          <button
+            onClick={onClose}
+            aria-label="关闭"
+            className="-mr-1 -mt-1 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-ink-secondary transition-colors hover:bg-surface-variant"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        {/* 操作按钮 */}
+        {/* 展开区：地址等次要信息 */}
+        <div
+          className={`overflow-hidden transition-all duration-200 ${
+            expanded ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="mt-3 flex items-start gap-2 text-gm-base text-ink-secondary">
+            <svg className="mt-0.5 h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
+            </svg>
+            <span>{merchant.address}</span>
+          </div>
+          {merchant.phone && (
+            <div className="mt-2 flex items-center gap-2 text-gm-base text-ink-secondary">
+              <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24 11.36 11.36 0 003.56.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.56 1 1 0 01-.25 1.02l-2.2 2.21z" />
+              </svg>
+              <span>{merchant.phone}</span>
+            </div>
+          )}
+        </div>
+
         <div className="mt-3 flex gap-2">
           <button
             onClick={() => navigate(`/merchant/${merchant.id}`)}
-            className="flex-1 rounded-lg bg-blue-500 py-2 text-center text-sm font-medium text-white hover:bg-blue-600"
+            className="flex-1 rounded-pill bg-gm-blue py-2.5 text-gm-base font-medium text-white transition-colors hover:bg-gm-blue-hover"
           >
             查看详情
           </button>
           {merchant.phone && (
             <a
               href={`tel:${merchant.phone}`}
-              className="flex items-center justify-center rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+              className="flex items-center justify-center gap-1.5 rounded-pill border border-outline px-4 py-2.5 text-gm-base font-medium text-gm-blue transition-colors hover:bg-gm-blue-light"
             >
-              <svg className="mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24 11.36 11.36 0 003.56.57 1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1 11.36 11.36 0 00.57 3.56 1 1 0 01-.25 1.02l-2.2 2.21z" />
               </svg>
               电话
             </a>

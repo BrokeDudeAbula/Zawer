@@ -1,6 +1,6 @@
 export { default as ProfilePage } from './ProfilePage'
 export { default as LoginPage } from './LoginPage'
 export { default as FavoritesPage } from './FavoritesPage'
-export { default as MyReviewsPage } from './MyReviewsPage'
+export { default as MyVotesPage } from './MyVotesPage'
 export { default as HistoryPage } from './HistoryPage'
 export { default as EditProfilePage } from './EditProfilePage'

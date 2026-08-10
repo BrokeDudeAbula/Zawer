@@ -8,7 +8,7 @@ import {
   ProfilePage,
   LoginPage,
   FavoritesPage,
-  MyReviewsPage,
+  MyVotesPage,
   HistoryPage,
   EditProfilePage,
 } from './features/user'
@@ -37,7 +37,7 @@ function App() {
 
           {/* 个人中心子路由 */}
           <Route path="/profile/favorites" element={<FavoritesPage />} />
-          <Route path="/profile/reviews" element={<MyReviewsPage />} />
+          <Route path="/profile/votes" element={<MyVotesPage />} />
           <Route path="/profile/history" element={<HistoryPage />} />
           <Route path="/profile/edit" element={<EditProfilePage />} />
 

@@ -4,11 +4,10 @@ import { Repository } from 'typeorm'
 import { User } from '../../entities/user.entity'
 import { Favorite } from '../../entities/favorite.entity'
 import { Merchant } from '../../entities/merchant.entity'
-import { Review } from '../../entities/review.entity'
+import { ZawerVote } from '../../entities/zawer-vote.entity'
 
-interface UserWithCounts extends User {
-  reviewCount: number
-  likeCount: number
+export interface UserWithCounts extends User {
+  zawerVoteCount: number
   favoriteCount: number
 }
 
@@ -21,8 +20,8 @@ export class UsersService {
     private favoriteRepository: Repository<Favorite>,
     @InjectRepository(Merchant)
     private merchantRepository: Repository<Merchant>,
-    @InjectRepository(Review)
-    private reviewRepository: Repository<Review>,
+    @InjectRepository(ZawerVote)
+    private voteRepository: Repository<ZawerVote>,
   ) {}
 
   async getProfile(userId: string): Promise<UserWithCounts> {
@@ -31,15 +30,14 @@ export class UsersService {
       throw new NotFoundException('用户不存在')
     }
 
-    const [reviewCount, favoriteCount] = await Promise.all([
-      this.reviewRepository.count({ where: { userId } }),
+    const [zawerVoteCount, favoriteCount] = await Promise.all([
+      this.voteRepository.count({ where: { userId } }),
       this.favoriteRepository.count({ where: { userId } }),
     ])
 
     return {
       ...user,
-      reviewCount,
-      likeCount: 0,
+      zawerVoteCount,
       favoriteCount,
     }
   }
@@ -69,29 +67,6 @@ export class UsersService {
 
     const merchants = favorites.map((fav) => fav.merchant)
     return { list: merchants, total: merchants.length }
-  }
-
-  async getMyReviews(userId: string, page: number = 1, pageSize: number = 20) {
-    const skip = (page - 1) * pageSize
-    const reviews = await this.reviewRepository.find({
-      where: { userId },
-      relations: ['merchant'],
-      order: { createdAt: 'DESC' },
-      skip,
-      take: pageSize,
-    })
-
-    const total = await this.reviewRepository.count({ where: { userId } })
-
-    return {
-      list: reviews.map((review) => ({
-        ...review,
-        merchantName: review.merchant?.name || '',
-      })),
-      total,
-      page,
-      pageSize,
-    }
   }
 
   async addFavorite(userId: string, merchantId: string) {

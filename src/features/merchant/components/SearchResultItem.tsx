@@ -1,32 +1,53 @@
 import { Link } from 'react-router-dom'
-import { Merchant } from '@/types/api'
+import { MerchantSearchResult } from '@/types/api'
 import { getZawerColor, getZawerLabel } from '@/utils/zawer'
 
 interface SearchResultItemProps {
-  merchant: Merchant
+  result: MerchantSearchResult
 }
 
-export default function SearchResultItem({ merchant }: SearchResultItemProps) {
-  const zawerColor = getZawerColor(merchant.zawerIndex)
-  const zawerLabel = getZawerLabel(merchant.zawerIndex)
+export default function SearchResultItem({ result }: SearchResultItemProps) {
+  const { score } = result
+
+  // 已被评分过的店走自有商家详情，未被评分的店只能凭 POI ID 进入
+  const target = score ? `/merchant/${score.merchantId}` : `/merchant/${result.poiId}`
 
   return (
     <Link
-      to={`/merchant/${merchant.id}`}
-      className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-4"
+      to={target}
+      state={{ poi: result, score }}
+      className="flex items-start gap-3 border-b border-outline px-4 py-3 transition-colors hover:bg-surface-hover"
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">{merchant.name}</h3>
-          <p className="text-sm text-gray-600 mt-1">{merchant.category}</p>
-          <p className="text-sm text-gray-500 mt-1 truncate">{merchant.address}</p>
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-surface-variant">
+        <svg className="h-5 w-5 text-ink-secondary" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z" />
+        </svg>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-gm-lg text-ink-primary">{result.name}</h3>
+
+        <div className="mt-0.5 flex items-center gap-1.5 text-gm-base text-ink-secondary">
+          {score && score.zawerCount > 0 ? (
+            <>
+              <span className="font-medium" style={{ color: getZawerColor(score.zawerCount) }}>
+                {score.zawerCount} 人说坑
+              </span>
+              <span
+                className="rounded-pill px-1.5 py-0.5 text-gm-xs font-medium text-white"
+                style={{ backgroundColor: getZawerColor(score.zawerCount) }}
+              >
+                {getZawerLabel(score.zawerCount)}
+              </span>
+            </>
+          ) : (
+            <span className="text-ink-tertiary">还没人说坑</span>
+          )}
         </div>
-        <div
-          className="flex-shrink-0 ml-3 px-3 py-1 rounded-full text-sm font-medium text-white"
-          style={{ backgroundColor: zawerColor }}
-        >
-          {zawerLabel}
-        </div>
+
+        <p className="mt-0.5 truncate text-gm-base text-ink-secondary">
+          {result.category} · {result.address}
+        </p>
       </div>
     </Link>
   )

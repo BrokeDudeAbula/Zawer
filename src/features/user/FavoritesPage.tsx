@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getZawerColor } from '@/utils/zawer'
 import { useNavigate } from 'react-router-dom'
 import { merchantService } from '@/services'
 import { useFavorites } from '@/hooks'
@@ -48,19 +49,13 @@ export default function FavoritesPage() {
     toggleFavorite(merchantId)
   }
 
-  const getZawerIndexColor = (index: number) => {
-    if (index >= 4) return 'text-green-600'
-    if (index >= 3) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="h-full overflow-y-auto bg-surface-hover">
         <div className="mx-auto max-w-2xl px-4 py-6">
           <button
             onClick={() => navigate(-1)}
-            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            className="mb-4 flex items-center gap-2 text-ink-secondary hover:text-ink-primary"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -72,9 +67,9 @@ export default function FavoritesPage() {
             </svg>
             返回
           </button>
-          <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
+          <div className="flex h-[60vh] flex-col items-center justify-center rounded-gm border border-outline bg-white p-8">
             <svg
-              className="mb-4 h-16 w-16 text-gray-400"
+              className="mb-4 h-16 w-16 text-ink-tertiary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -86,10 +81,10 @@ export default function FavoritesPage() {
                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
             </svg>
-            <p className="text-lg text-gray-600">请先登录查看收藏</p>
+            <p className="text-lg text-ink-secondary">请先登录查看收藏</p>
             <button
               onClick={() => setShowLoginGuard(true)}
-              className="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700"
+              className="mt-4 rounded-gm bg-gm-blue px-6 py-2 text-white hover:bg-gm-blue-hover"
             >
               去登录
             </button>
@@ -101,11 +96,11 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-full overflow-y-auto bg-surface-hover">
       <div className="mx-auto max-w-2xl px-4 py-6">
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="mb-4 flex items-center gap-2 text-ink-secondary hover:text-ink-primary"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -118,16 +113,16 @@ export default function FavoritesPage() {
           返回
         </button>
 
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">我的收藏</h1>
+        <h1 className="mb-6 text-2xl font-bold text-ink-primary">我的收藏</h1>
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="text-gray-600">加载中...</div>
+            <div className="text-ink-secondary">加载中...</div>
           </div>
         ) : merchants.length === 0 ? (
-          <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8">
+          <div className="flex h-[60vh] flex-col items-center justify-center rounded-gm border border-outline bg-white p-8">
             <svg
-              className="mb-4 h-16 w-16 text-gray-400"
+              className="mb-4 h-16 w-16 text-ink-tertiary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -139,37 +134,40 @@ export default function FavoritesPage() {
                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
               />
             </svg>
-            <p className="text-lg text-gray-600">暂无收藏，去发现好商家吧！</p>
+            <p className="text-lg text-ink-secondary">暂无收藏，去发现好商家吧！</p>
           </div>
         ) : (
           <div className="space-y-4">
             {merchants.map((merchant) => (
               <div
                 key={merchant.id}
-                className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300"
+                className="cursor-pointer rounded-gm border border-outline bg-white p-4 hover:border-outline"
                 onClick={() => navigate(`/merchant/${merchant.id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{merchant.name}</h3>
+                    <h3 className="text-lg font-semibold text-ink-primary">{merchant.name}</h3>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className={`font-semibold ${getZawerIndexColor(merchant.zawerIndex)}`}>
-                        Zawer 指数 {merchant.zawerIndex.toFixed(1)}
+                      <span
+                        className="font-medium"
+                        style={{ color: getZawerColor(merchant.zawerCount) }}
+                      >
+                        {merchant.zawerCount} 人说坑
                       </span>
-                      <span className="text-gray-400">|</span>
-                      <span className="text-sm text-gray-600">{merchant.category}</span>
+                      <span className="text-ink-tertiary">|</span>
+                      <span className="text-sm text-ink-secondary">{merchant.category}</span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">{merchant.address}</p>
+                    <p className="mt-1 text-sm text-ink-secondary">{merchant.address}</p>
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       handleToggleFavorite(merchant.id)
                     }}
-                    className="ml-4 flex-shrink-0 rounded-full p-2 hover:bg-gray-100"
+                    className="ml-4 flex-shrink-0 rounded-full p-2 hover:bg-surface-hover"
                   >
                     <svg
-                      className={`h-6 w-6 ${isFavorited(merchant.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`}
+                      className={`h-6 w-6 ${isFavorited(merchant.id) ? 'fill-red-500 text-gm-red' : 'text-ink-tertiary'}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
