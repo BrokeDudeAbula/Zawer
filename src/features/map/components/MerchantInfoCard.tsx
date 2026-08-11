@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { Merchant } from '@/types'
+import type { AmapPoi, Merchant, ToggleVoteResult } from '@/types'
+import { voteService } from '@/services'
+import { useAuth } from '@/hooks/useAuth'
 import { calculateDistance } from '@/utils/geo'
 import { getZawerColor, getZawerLabel } from '@/utils/zawer'
+import ZawerButton from '@/features/merchant/components/ZawerButton'
 
 interface MerchantInfoCardProps {
   merchant: Merchant | null
+  poi?: AmapPoi | null
   userPosition?: { lng: number; lat: number } | null
   onClose: () => void
+  onRequireLogin: () => void
+  onVoteChange: (previousMerchantId: string, result: ToggleVoteResult) => void
 }
 
 // 拖拽超过该距离才触发展开/收起，避免误触
@@ -20,19 +26,56 @@ function formatDistance(meters: number): string {
 
 export default function MerchantInfoCard({
   merchant,
+  poi,
   userPosition,
   onClose,
+  onRequireLogin,
+  onVoteChange,
 }: MerchantInfoCardProps) {
   const navigate = useNavigate()
+  const { isLoggedIn } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [dragOffset, setDragOffset] = useState(0)
+  const [voteStatus, setVoteStatus] = useState<{
+    merchantId: string
+    voted: boolean
+  } | null>(null)
+  const [voting, setVoting] = useState(false)
+  const [voteError, setVoteError] = useState<string | null>(null)
   const dragStartRef = useRef<number | null>(null)
+  const merchantId = merchant?.id
+  const merchantIdRef = useRef(merchantId)
+  merchantIdRef.current = merchantId
 
   // 切换商家时回到收起状态
   useEffect(() => {
     setExpanded(false)
     setDragOffset(0)
+    setVoteError(null)
   }, [merchant?.id])
+
+  // 商家切换后读取当前用户的评价状态，避免把“已点”误显示成可新增
+  useEffect(() => {
+    if (!merchantId || !isLoggedIn || poi) {
+      setVoteStatus(null)
+      return
+    }
+
+    let active = true
+    voteService
+      .hasVoted(merchantId)
+      .then(({ voted }) => {
+        if (active) setVoteStatus({ merchantId, voted })
+      })
+      .catch((error) => {
+        console.error('读取 Zawer 状态失败:', error)
+        if (active) setVoteStatus({ merchantId, voted: false })
+      })
+
+    return () => {
+      active = false
+    }
+  }, [merchantId, isLoggedIn, poi])
 
   if (!merchant) return null
 
@@ -70,9 +113,41 @@ export default function MerchantInfoCard({
     setDragOffset(0)
   }
 
+  const handleZawer = async (comment?: string) => {
+    if (!isLoggedIn) {
+      onRequireLogin()
+      return
+    }
+    if (!merchant) return
+
+    try {
+      setVoting(true)
+      setVoteError(null)
+      const result = await voteService.toggle({
+        merchantId: merchant.id,
+        poi: poi ?? undefined,
+        comment,
+      })
+      if (merchantIdRef.current === merchant.id) {
+        setVoteStatus({ merchantId: result.merchantId, voted: result.voted })
+      }
+      onVoteChange(merchant.id, result)
+    } catch (error) {
+      console.error('地图评价提交失败:', error)
+      if (merchantIdRef.current === merchant.id) {
+        setVoteError('提交失败，请稍后重试')
+      }
+    } finally {
+      setVoting(false)
+    }
+  }
+
+  const voted = voteStatus?.merchantId === merchant.id && voteStatus.voted
+  const voteStatusLoading = isLoggedIn && !poi && voteStatus?.merchantId !== merchant.id
+
   return (
     <div
-      className="absolute inset-x-0 bottom-0 z-30 rounded-t-2xl bg-white shadow-gm-4"
+      className="absolute inset-x-0 bottom-0 z-30 max-h-[calc(100vh-1rem)] overflow-y-auto rounded-t-2xl bg-white shadow-gm-4"
       style={{
         transform: `translateY(${dragOffset}px)`,
         transition: dragStartRef.current === null ? 'transform 200ms ease-out' : 'none',
@@ -149,10 +224,25 @@ export default function MerchantInfoCard({
           )}
         </div>
 
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 border-t border-outline pt-3">
+          <ZawerButton
+            key={merchant.id}
+            voted={voted}
+            submitting={voting}
+            statusLoading={voteStatusLoading}
+            onSubmit={handleZawer}
+          />
+          {voteError && (
+            <p role="alert" className="mt-2 text-center text-gm-sm text-zawer-danger">
+              {voteError}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-2 flex gap-2">
           <button
             onClick={() => navigate(`/merchant/${merchant.id}`)}
-            className="flex-1 rounded-pill bg-gm-blue py-2.5 text-gm-base font-medium text-white transition-colors hover:bg-gm-blue-hover"
+            className="flex-1 rounded-pill border border-outline py-2.5 text-gm-base font-medium text-gm-blue transition-colors hover:bg-gm-blue-light"
           >
             查看详情
           </button>

@@ -1,10 +1,13 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import type { Merchant } from '@/types'
+import type { AmapPoi, Merchant, ToggleVoteResult } from '@/types'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useMerchants } from '@/hooks/useMerchants'
 import { useAppStore } from '@/stores/app-store'
+import { amapService } from '@/services/amap'
+import { merchantService } from '@/services/merchant'
 import { calculateDistance } from '@/utils/geo'
+import LoginGuard from '@/components/LoginGuard'
 import MapContainer from './components/MapContainer'
 import LocationMarker from './components/LocationMarker'
 import LocationPermissionTip from './components/LocationPermissionTip'
@@ -16,12 +19,23 @@ import MapSearchBar from './components/MapSearchBar'
 import CategoryChips from './components/CategoryChips'
 import { FilterPanel } from './components/FilterPanel'
 
+interface AMapHotspotEvent {
+  id?: string
+}
+
 export default function MapPage() {
   // 地图实例必须是 state：存进 ref 不会触发重渲染，依赖它的图层（热力图、定位点、标注）
   // 就只能靠其它 state 变化偶然挂载，刷新页面时经常整片消失
   const [map, setMap] = useState<any>(null)
   const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null)
+  const [selectedPoi, setSelectedPoi] = useState<AmapPoi | null>(null)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [showLoginGuard, setShowLoginGuard] = useState(false)
+  const [poiLoading, setPoiLoading] = useState(false)
+  const [poiError, setPoiError] = useState<string | null>(null)
+  const hotspotRequestIdRef = useRef(0)
+  const selectedMerchantIdRef = useRef(selectedMerchant?.id)
+  selectedMerchantIdRef.current = selectedMerchant?.id
 
   // 定位
   const {
@@ -98,10 +112,74 @@ export default function MapPage() {
     setMap((prev: any) => prev ?? instance)
   }, [])
 
+  // 高德底图自带的商家名称不是 React 标记，需要通过热点事件单独接入评价链路
+  useEffect(() => {
+    if (!map) return
+
+    const handleHotspotClick = async (event: AMapHotspotEvent) => {
+      if (!event.id) return
+
+      const requestId = (hotspotRequestIdRef.current += 1)
+      setSelectedMerchant(null)
+      setSelectedPoi(null)
+      setPoiError(null)
+      setPoiLoading(true)
+
+      try {
+        const poi = await amapService.getPoiById(event.id)
+        if (requestId !== hotspotRequestIdRef.current) return
+        if (!poi) {
+          throw new Error('高德未返回 POI 详情')
+        }
+
+        let score = null
+        try {
+          const scores = await merchantService.getScoresByPoiIds([poi.poiId])
+          score = scores[poi.poiId] ?? null
+        } catch (error) {
+          // 本地评分暂时不可用时仍展示 POI，提交时会给出明确错误
+          console.error('读取商家 Zawer 计数失败:', error)
+        }
+
+        if (requestId !== hotspotRequestIdRef.current) return
+        setSelectedMerchant({
+          id: score?.merchantId ?? poi.poiId,
+          name: poi.name,
+          category: poi.category,
+          address: poi.address,
+          lng: poi.lng,
+          lat: poi.lat,
+          phone: poi.phone,
+          zawerCount: score?.zawerCount ?? 0,
+        })
+        setSelectedPoi(score ? null : poi)
+        map.panTo([poi.lng, poi.lat])
+      } catch (error) {
+        if (requestId !== hotspotRequestIdRef.current) return
+        console.error('读取地图商家失败:', error)
+        setPoiError('暂时无法读取该商家，请重试')
+      } finally {
+        if (requestId === hotspotRequestIdRef.current) {
+          setPoiLoading(false)
+        }
+      }
+    }
+
+    map.on('hotspotclick', handleHotspotClick)
+    return () => {
+      hotspotRequestIdRef.current += 1
+      map.off('hotspotclick', handleHotspotClick)
+    }
+  }, [map])
+
   // 点击商家标注
   const handleMarkerClick = useCallback(
     (merchant: Merchant) => {
+      hotspotRequestIdRef.current += 1
       setSelectedMerchant(merchant)
+      setSelectedPoi(null)
+      setPoiLoading(false)
+      setPoiError(null)
       // 平移地图到商家位置
       map?.panTo([merchant.lng, merchant.lat])
     },
@@ -110,8 +188,26 @@ export default function MapPage() {
 
   // 关闭信息卡片
   const handleCloseCard = useCallback(() => {
+    hotspotRequestIdRef.current += 1
     setSelectedMerchant(null)
+    setSelectedPoi(null)
+    setPoiLoading(false)
+    setPoiError(null)
   }, [])
+
+  // 评价成功后先更新当前卡片，再刷新商家列表以同步标注和热力图
+  const handleVoteChange = useCallback(
+    (previousMerchantId: string, result: ToggleVoteResult) => {
+      if (selectedMerchantIdRef.current === previousMerchantId) {
+        setSelectedMerchant((current) =>
+          current ? { ...current, id: result.merchantId, zawerCount: result.zawerCount } : current,
+        )
+        setSelectedPoi(null)
+      }
+      void reloadMerchants()
+    },
+    [reloadMerchants],
+  )
 
   // 回到我的位置
   const handleLocate = useCallback(() => {
@@ -202,21 +298,53 @@ export default function MapPage() {
       {/* 筛选面板 */}
       <FilterPanel isOpen={isFilterOpen} onClose={() => setIsFilterOpen(false)} />
 
-      {/* 右下角悬浮按钮，位置随底部卡片是否显示调整 */}
-      <div
-        className={`absolute right-4 z-20 transition-all duration-200 ${
-          selectedMerchant ? 'bottom-48' : 'bottom-6'
-        }`}
-      >
-        <LocateButton onClick={handleLocate} loading={locationLoading} />
-      </div>
+      {poiLoading && (
+        <div className="absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
+          <div
+            role="status"
+            className="rounded-gm bg-white px-4 py-2.5 text-gm-base text-ink-secondary shadow-gm-2"
+          >
+            正在读取商家…
+          </div>
+        </div>
+      )}
+
+      {poiError && (
+        <div className="absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-gm bg-white py-2 pl-4 pr-2 text-gm-base text-zawer-danger shadow-gm-2"
+          >
+            <span>{poiError}</span>
+            <button
+              type="button"
+              onClick={() => setPoiError(null)}
+              aria-label="关闭提示"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-secondary hover:bg-surface-variant"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 评价卡展开后隐藏定位按钮，避免与输入区发生遮挡 */}
+      {!selectedMerchant && !poiLoading && !poiError && (
+        <div className="absolute bottom-6 right-4 z-20">
+          <LocateButton onClick={handleLocate} loading={locationLoading} />
+        </div>
+      )}
 
       {/* 商家信息卡片 */}
       <MerchantInfoCard
         merchant={selectedMerchant}
+        poi={selectedPoi}
         userPosition={userPosition}
         onClose={handleCloseCard}
+        onRequireLogin={() => setShowLoginGuard(true)}
+        onVoteChange={handleVoteChange}
       />
+      <LoginGuard isOpen={showLoginGuard} onClose={() => setShowLoginGuard(false)} />
     </div>
   )
 }

@@ -26,6 +26,7 @@ type SearchCallback = (status: string, result: AmapSearchResult | string) => voi
 
 interface AmapPlaceSearch {
   search(keyword: string, callback: SearchCallback): void
+  getDetails(poiId: string, callback: SearchCallback): void
   searchNearBy(
     keyword: string,
     center: [number, number],
@@ -118,6 +119,14 @@ function sortByDistance(pois: AmapPoi[], center: SearchCenter): AmapPoi[] {
 }
 
 export const amapService = {
+  async getPoiById(poiId: string): Promise<AmapPoi | null> {
+    const placeSearch = await getPlaceSearch()
+    const pois = normalizeAll(
+      await runSearch((callback) => placeSearch.getDetails(poiId, callback)),
+    )
+    return pois[0] ?? null
+  },
+
   async searchPoi(keyword: string, center?: SearchCenter | null): Promise<PoiSearchResult> {
     const placeSearch = await getPlaceSearch()
 

@@ -33,6 +33,7 @@ export function useAMap({ container, center, zoom = 14 }: UseAMapOptions) {
           center: center || [104.0657, 30.6595],
           viewMode: '2D',
           resizeEnable: true,
+          isHotspot: true,
         })
 
         mapRef.current = map

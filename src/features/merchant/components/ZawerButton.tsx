@@ -3,10 +3,16 @@ import { useState } from 'react'
 interface ZawerButtonProps {
   voted: boolean
   submitting: boolean
+  statusLoading?: boolean
   onSubmit: (comment?: string) => void
 }
 
-export default function ZawerButton({ voted, submitting, onSubmit }: ZawerButtonProps) {
+export default function ZawerButton({
+  voted,
+  submitting,
+  statusLoading = false,
+  onSubmit,
+}: ZawerButtonProps) {
   const [showComment, setShowComment] = useState(false)
   const [comment, setComment] = useState('')
 
@@ -62,7 +68,7 @@ export default function ZawerButton({ voted, submitting, onSubmit }: ZawerButton
   return (
     <button
       onClick={handleClick}
-      disabled={submitting}
+      disabled={submitting || statusLoading}
       className={`flex w-full items-center justify-center gap-2 rounded-pill py-3 text-gm-base font-medium transition-colors disabled:opacity-60 ${
         voted
           ? 'border border-zawer-danger bg-white text-zawer-danger hover:bg-[#fce8e6]'
@@ -72,7 +78,7 @@ export default function ZawerButton({ voted, submitting, onSubmit }: ZawerButton
       <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2a2 2 0 002 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5a2 2 0 00-2-2zm4 0v12h4V3h-4z" />
       </svg>
-      {voted ? '已点 Zawer，点击取消' : '这家店 Zawer'}
+      {statusLoading ? '正在读取…' : voted ? '已点 Zawer，点击取消' : '这家店 Zawer'}
     </button>
   )
 }
