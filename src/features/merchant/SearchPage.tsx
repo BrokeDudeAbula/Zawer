@@ -5,6 +5,7 @@ import { amapService } from '@/services/amap'
 import { MerchantSearchResult } from '@/types/api'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSearchHistory } from '@/hooks/useSearchHistory'
+import { useGeolocation } from '@/hooks/useGeolocation'
 import SearchResultItem from './components/SearchResultItem'
 
 const HOT_SEARCHES = ['火锅', '串串', '酒店', '停车场', '奶茶']
@@ -16,9 +17,12 @@ export default function SearchPage() {
   const [isSearching, setIsSearching] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [fellBackToCity, setFellBackToCity] = useState(false)
   const requestIdRef = useRef(0)
 
   const { history, addHistory, removeHistory, clearHistory } = useSearchHistory()
+  // 定位结果会缓存在 app-store，从地图页过来时不会重复弹权限框
+  const { position: userPosition } = useGeolocation()
 
   const debouncedSearch = useDebounce(async (searchKeyword: string) => {
     if (!searchKeyword.trim()) {
@@ -26,6 +30,7 @@ export default function SearchPage() {
       setSearchResults([])
       setHasSearched(false)
       setSearchError(null)
+      setFellBackToCity(false)
       return
     }
 
@@ -35,11 +40,15 @@ export default function SearchPage() {
     setSearchError(null)
     try {
       // 店铺信息来自高德实时搜索，Zawer 评分来自自有数据库，用 POI ID 关联
-      const pois = await amapService.searchPoi(searchKeyword)
+      const { pois, fellBackToCity: fellBack } = await amapService.searchPoi(
+        searchKeyword,
+        userPosition,
+      )
       const scores = await merchantService.getScoresByPoiIds(pois.map((poi) => poi.poiId))
       if (requestId !== requestIdRef.current) return
 
       setSearchResults(pois.map((poi) => ({ ...poi, score: scores[poi.poiId] ?? null })))
+      setFellBackToCity(fellBack && pois.length > 0)
       setHasSearched(true)
       addHistory(searchKeyword)
     } catch (error) {
@@ -47,6 +56,7 @@ export default function SearchPage() {
       console.error('Search failed:', error)
       setSearchResults([])
       setHasSearched(true)
+      setFellBackToCity(false)
       setSearchError(error instanceof Error ? error.message : '搜索失败，请稍后重试')
     } finally {
       if (requestId === requestIdRef.current) {
@@ -55,9 +65,10 @@ export default function SearchPage() {
     }
   }, 300)
 
+  // 定位是异步的，晚于首次输入到达时要用新坐标重搜一次，否则这次结果没有距离排序
   useEffect(() => {
     debouncedSearch(keyword)
-  }, [keyword, debouncedSearch])
+  }, [keyword, debouncedSearch, userPosition])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setKeyword(e.target.value)
@@ -68,6 +79,7 @@ export default function SearchPage() {
     setSearchResults([])
     setHasSearched(false)
     setSearchError(null)
+    setFellBackToCity(false)
   }
 
   const handleHistoryClick = (historyKeyword: string) => {
@@ -159,6 +171,11 @@ export default function SearchPage() {
               </div>
             ) : (
               <div>
+                {fellBackToCity && (
+                  <div className="border-b border-outline bg-surface-hover px-4 py-2.5 text-gm-base text-ink-secondary">
+                    附近 5 公里内没有结果，以下为全城结果（仍按距离排序）
+                  </div>
+                )}
                 {searchResults.map((result) => (
                   <SearchResultItem key={result.poiId} result={result} />
                 ))}

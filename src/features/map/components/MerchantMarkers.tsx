@@ -144,11 +144,15 @@ export default function MerchantMarkers({ map, merchants, onMarkerClick }: Merch
     }
 
     return () => {
-      if (clusterRef.current) {
-        clusterRef.current.setMap(null)
-        clusterRef.current = null
+      // React 卸载时父组件的 cleanup 先执行，地图此时可能已被 destroy，
+      // 继续操作会抛错并中断整棵树的卸载（表现为切换路由后白屏）
+      try {
+        clusterRef.current?.setMap(null)
+        markersRef.current.forEach((m) => map.remove(m))
+      } catch {
+        // 地图已销毁，其上的标注一并失效，无需额外清理
       }
-      markersRef.current.forEach((m) => map.remove(m))
+      clusterRef.current = null
       markersRef.current = []
     }
   }, [map, merchants, onMarkerClick])

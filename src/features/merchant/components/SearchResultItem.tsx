@@ -6,6 +6,11 @@ interface SearchResultItemProps {
   result: MerchantSearchResult
 }
 
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} m`
+  return `${(meters / 1000).toFixed(1)} km`
+}
+
 export default function SearchResultItem({ result }: SearchResultItemProps) {
   const { score } = result
 
@@ -46,6 +51,9 @@ export default function SearchResultItem({ result }: SearchResultItemProps) {
         </div>
 
         <p className="mt-0.5 truncate text-gm-base text-ink-secondary">
+          {result.distance !== undefined && (
+            <span className="text-ink-primary">{formatDistance(result.distance)} · </span>
+          )}
           {result.category} · {result.address}
         </p>
       </div>

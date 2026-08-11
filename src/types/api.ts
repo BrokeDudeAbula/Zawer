@@ -43,6 +43,14 @@ export interface AmapPoi {
   lng: number
   lat: number
   phone?: string
+  // 距用户的直线距离（米）。周边搜索由高德给出，全城搜索时前端计算
+  distance?: number
+}
+
+export interface PoiSearchResult {
+  pois: AmapPoi[]
+  // 周边无结果而退回全城搜索时为 true，用于向用户说明排序范围已改变
+  fellBackToCity: boolean
 }
 
 // 后端按 POI ID 返回的自有 Zawer 计数

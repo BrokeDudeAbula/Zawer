@@ -47,10 +47,12 @@ export function useAMap({ container, center, zoom = 14 }: UseAMapOptions) {
     initMap()
 
     return () => {
-      if (map) {
-        map.destroy()
-        mapRef.current = null
+      try {
+        map?.destroy()
+      } catch (err) {
+        console.warn('[AMap] 销毁地图失败:', err)
       }
+      mapRef.current = null
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

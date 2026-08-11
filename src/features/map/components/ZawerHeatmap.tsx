@@ -128,10 +128,13 @@ export default function ZawerHeatmap({ map, merchants }: ZawerHeatmapProps) {
 
   useEffect(() => {
     return () => {
-      if (heatmapRef.current) {
-        heatmapRef.current.setMap(null)
-        heatmapRef.current = null
+      // 地图可能已被父组件 destroy，清理失败不应中断卸载流程
+      try {
+        heatmapRef.current?.setMap(null)
+      } catch {
+        // 地图已销毁，热力图图层一并失效
       }
+      heatmapRef.current = null
     }
   }, [])
 

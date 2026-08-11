@@ -68,10 +68,15 @@ export default function LocationMarker({ map, position }: LocationMarkerProps) {
     markerRef.current = marker
 
     return () => {
-      if (markerRef.current) {
-        map.remove(markerRef.current)
-        markerRef.current = null
+      // 地图可能已被父组件 destroy，清理失败不应中断卸载流程
+      try {
+        if (markerRef.current) {
+          map.remove(markerRef.current)
+        }
+      } catch {
+        // 地图已销毁，标记一并失效
       }
+      markerRef.current = null
     }
   }, [map, position])
 
