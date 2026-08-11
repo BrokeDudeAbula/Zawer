@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { merchantService, voteService } from '@/services'
 import { Merchant, MerchantSearchResult, PoiScore, ZawerComment } from '@/types/api'
-import { useFavorites, useBrowseHistory } from '@/hooks'
+import { useBrowseHistory } from '@/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import LoginGuard from '@/components/LoginGuard'
 import MerchantInfo from './components/MerchantInfo'
@@ -22,7 +22,6 @@ export default function MerchantDetailPage() {
   // 从搜索页跳来的未入库商家只存在于高德，本地库查不到，用路由携带的 POI 信息兜底
   const unratedPoi = routeState.poi && !routeState.score ? routeState.poi : null
   const { isLoggedIn } = useAuth()
-  const { isFavorited, toggleFavorite } = useFavorites()
   const { addHistory } = useBrowseHistory()
   const [merchant, setMerchant] = useState<Merchant | null>(null)
   const [comments, setComments] = useState<ZawerComment[]>([])
@@ -126,16 +125,6 @@ export default function MerchantDetailPage() {
     )
   }
 
-  const handleToggleFavorite = () => {
-    if (!isLoggedIn) {
-      setShowLoginGuard(true)
-      return
-    }
-    if (merchant) {
-      toggleFavorite(merchant.id)
-    }
-  }
-
   const handleZawer = async (comment?: string) => {
     if (!isLoggedIn) {
       setShowLoginGuard(true)
@@ -170,7 +159,7 @@ export default function MerchantDetailPage() {
   return (
     <div className="relative flex h-full flex-col bg-white">
       {/* 顶部操作条 */}
-      <div className="flex flex-shrink-0 items-center justify-between border-b border-outline px-2 py-2">
+      <div className="flex flex-shrink-0 items-center border-b border-outline px-2 py-2">
         <button
           onClick={() => navigate(-1)}
           aria-label="返回"
@@ -186,29 +175,6 @@ export default function MerchantDetailPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        {merchant && !unratedPoi && (
-          <button
-            onClick={handleToggleFavorite}
-            aria-label="收藏"
-            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-surface-variant"
-          >
-            <svg
-              className={`h-5 w-5 ${
-                isFavorited(merchant.id) ? 'fill-gm-blue text-gm-blue' : 'text-ink-secondary'
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
-          </button>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto pb-24">

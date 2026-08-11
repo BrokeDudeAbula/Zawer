@@ -4,14 +4,7 @@ import Layout from './components/Layout'
 import MapPage from './features/map/MapPage'
 import MerchantDetailPage from './features/merchant/MerchantDetailPage'
 import SearchPage from './features/merchant/SearchPage'
-import {
-  ProfilePage,
-  LoginPage,
-  FavoritesPage,
-  MyVotesPage,
-  HistoryPage,
-  EditProfilePage,
-} from './features/user'
+import { ProfilePage, LoginPage, MyVotesPage, HistoryPage, EditProfilePage } from './features/user'
 import NotFound from './components/NotFound'
 import { useAuthStore } from './stores/auth-store'
 
@@ -36,7 +29,6 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
 
           {/* 个人中心子路由 */}
-          <Route path="/profile/favorites" element={<FavoritesPage />} />
           <Route path="/profile/votes" element={<MyVotesPage />} />
           <Route path="/profile/history" element={<HistoryPage />} />
           <Route path="/profile/edit" element={<EditProfilePage />} />
