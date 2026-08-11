@@ -1,9 +1,15 @@
 import { create } from 'zustand'
 
+export interface UserLocation {
+  lng: number
+  lat: number
+  accuracy: number | null
+}
+
 interface AppState {
   // 用户位置
-  userLocation: { lng: number; lat: number } | null
-  setUserLocation: (location: { lng: number; lat: number } | null) => void
+  userLocation: UserLocation | null
+  setUserLocation: (location: UserLocation | null) => void
   // 筛选条件
   filters: {
     category: string[]

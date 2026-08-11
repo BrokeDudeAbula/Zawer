@@ -34,6 +34,7 @@ export default function MapPage() {
   const [poiLoading, setPoiLoading] = useState(false)
   const [poiError, setPoiError] = useState<string | null>(null)
   const hotspotRequestIdRef = useRef(0)
+  const hasCenteredOnUserRef = useRef(false)
   const selectedMerchantIdRef = useRef(selectedMerchant?.id)
   selectedMerchantIdRef.current = selectedMerchant?.id
 
@@ -44,6 +45,7 @@ export default function MapPage() {
     permissionDenied,
     locate,
     loading: locationLoading,
+    accuracy: locationAccuracy,
   } = useGeolocation()
 
   // 商家数据（库中只存被评分过的真实商家）
@@ -111,6 +113,13 @@ export default function MapPage() {
   const handleMapReady = useCallback((instance: any) => {
     setMap((prev: any) => prev ?? instance)
   }, [])
+
+  // 首次获得有效位置时自动居中；之后用户拖动地图不会被定位状态更新打断
+  useEffect(() => {
+    if (!map || !userPosition || hasCenteredOnUserRef.current) return
+    hasCenteredOnUserRef.current = true
+    map.setZoomAndCenter(15, [userPosition.lng, userPosition.lat])
+  }, [map, userPosition])
 
   // 高德底图自带的商家名称不是 React 标记，需要通过热点事件单独接入评价链路
   useEffect(() => {
@@ -210,13 +219,13 @@ export default function MapPage() {
   )
 
   // 回到我的位置
-  const handleLocate = useCallback(() => {
-    if (userPosition && map) {
-      map.setZoomAndCenter(15, [userPosition.lng, userPosition.lat])
-    } else {
-      locate()
+  const handleLocate = useCallback(async () => {
+    const latestPosition = await locate()
+    if (latestPosition && map) {
+      hasCenteredOnUserRef.current = true
+      map.setZoomAndCenter(17, [latestPosition.lng, latestPosition.lat])
     }
-  }, [userPosition, locate, map])
+  }, [locate, map])
 
   // 地图中心点
   const center: [number, number] = userPosition
@@ -291,8 +300,9 @@ export default function MapPage() {
       {/* 定位权限提示 */}
       <LocationPermissionTip
         error={locationError}
+        accuracy={locationAccuracy}
         permissionDenied={permissionDenied}
-        onRetry={locate}
+        onRetry={handleLocate}
       />
 
       {/* 筛选面板 */}
